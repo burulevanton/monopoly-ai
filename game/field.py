@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from game.player import Player
 
 # абстрактный класс, обозначающий одну ячейку на поле
 
@@ -10,11 +11,11 @@ class Field:
         self.__name = name
         self.__location = location
 
-    def print_info(self, players, player_num):
-        print("Игрок {} попал на поле {}".format(players[player_num].name, self.name))
+    def print_info(self, player: Player):
+        print("Игрок {} попал на поле {}".format(player.name, self.name))
 
     @abstractmethod
-    def player_interaction(self, players, player_num, queue1, queue2, num_of_players):
+    def player_interaction(self, player):
         pass
 
     @property

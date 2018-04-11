@@ -1,4 +1,5 @@
 from game.field import Field
+from game.player import Player
 
 # класс, отвечающий за поле "Бесплатная стоянка"
 
@@ -8,6 +9,6 @@ class FreeParking(Field):
     def __init__(self, name, location):
         super().__init__(name, location)
 
-    def player_interaction(self, players, player_num, queue1, queue2, num_of_players):
-        self.print_info(players, player_num)
-        print("Игрок {} отдыхает".format(players[player_num].name))
+    def player_interaction(self, player: Player):
+        self.print_info(player)
+        print("Игрок {} отдыхает".format(player.name))

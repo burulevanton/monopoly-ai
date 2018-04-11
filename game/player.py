@@ -1,4 +1,6 @@
 import random
+from game.railway import Railway
+from game.utility import Utility
 
 
 class Player:
@@ -9,6 +11,7 @@ class Player:
         self.__current_balance = 1500
         self.__current_location = 0
         self.__in_game = True
+        self.__num_of_owned_field = {}
 
     @property
     def name(self):
@@ -47,10 +50,24 @@ class Player:
         roll1 = random.randint(1, 6)
         roll2 = random.randint(1, 6)
         print("Игрок {} выбрасывает {} и {}".format(self.name, roll1, roll2))
-        if self.location + roll1 + roll2 > 40:
+        if self.location + roll1 + roll2 >= 40:
             self.location = self.location + roll1 + roll2 - 40
             self.add_balance(200)
             print("Игрок {} проходит поле Вперёд и получает 200".format(self.name))
         else:
             self.location += roll1+roll2
 
+    def own_field(self, field):
+        if isinstance(field, Railway):
+            kind = 'railway'
+        elif isinstance(field, Utility):
+            kind = 'utility'
+        else:
+            kind = field.color
+        if kind in self.__num_of_owned_field:
+            self.__num_of_owned_field[kind] += 1
+        else:
+            self.__num_of_owned_field[kind] = 1
+        f = open('text.txt', 'a')
+        f.write(str(self.__num_of_owned_field))
+        f.close()

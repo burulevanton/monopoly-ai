@@ -8,9 +8,9 @@ class GoToJail(Field):
     def __init__(self, name, location):
         super().__init__(name, location)
 
-    def player_interaction(self, players, player_num, queue1, queue2, num_of_players):
-        self.print_info(players, player_num)
-        print("Игрок {} отправляется в тюрьму".format(players[player_num].name))
-        print("Игрок {} платит 50".format(players[player_num].name))
-        players[player_num].dec_balance(50)
-        # переместить в тюрьму
+    def player_interaction(self, player):
+        self.print_info(player)
+        print("Игрок {} отправляется в тюрьму".format(player.name))
+        print("Игрок {} платит 50".format(player.name))
+        player.dec_balance(50)
+        player.location = 10

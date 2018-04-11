@@ -35,6 +35,13 @@ class Game:
         for el in temp:
             q.put(el)
 
+    @staticmethod
+    def get_num_field_color(color):
+        if color in ['brown', 'dark_blue']:
+            return 2
+        else:
+            return 3
+
     def init_game_board(self):
         self.__board.append(Forward("Вперёд", 0))
         self.__board.append(Property("ул.Житная", 1, 60, 2, "brown"))
@@ -47,7 +54,7 @@ class Game:
         self.__board.append(Property("ул. Огарева", 8, 100, 6, "blue"))
         self.__board.append(Property("ул. Первая парковая", 9, 120, 8, "blue"))
         self.__board.append(Jail("Тюрьма", 10))
-        self.__board.append(Property("ул. Полянка",11, 140, 10, "pink"))
+        self.__board.append(Property("ул. Полянка", 11, 140, 10, "pink"))
         self.__board.append(Utility("Электроэнергия", 12, 150, 4))
         self.__board.append(Property("ул. Сретенка", 13, 140, 10, "pink"))
         self.__board.append(Property("Ростовская набережная", 14, 160, 12, "pink"))
@@ -73,9 +80,9 @@ class Game:
         self.__board.append(Property("Кутузовский проспект", 34, 320, 28, 'green'))
         self.__board.append(Railway("Ленинградская железная дорога", 35, 200, 25))
         self.__board.append(Chance("Шанс", 36))
-        self.__board.append(Property("ул. Малая Бронная", 37, 350, 35, 'blue'))
+        self.__board.append(Property("ул. Малая Бронная", 37, 350, 35, 'dark_blue'))
         self.__board.append(Tax("Сверхналог", 38, 100))
-        self.__board.append(Property("ул. Арбат", 39, 400, 50, 'blue'))
+        self.__board.append(Property("ул. Арбат", 39, 400, 50, 'dark_blue'))
 
     def init_queue(self):
         Game.fill_queue(self.__cardChance)
@@ -92,11 +99,7 @@ class Game:
             self.__players.append(Player(name, i))
 
     def play_round(self):
-        self.__players[0].roll_dice()
-        self.__board[self.__players[0].location].player_interaction(self.__players, 0, self.__cardChance, self.__cardTreasury, self.__numOfPlayers)
-        self.__players[1].roll_dice()
-        self.__board[self.__players[1].location].player_interaction(self.__players, 1, self.__cardChance, self.__cardTreasury, self.__numOfPlayers)
-        self.__players[0].roll_dice()
-        self.__board[self.__players[0].location].player_interaction(self.__players, 0, self.__cardChance, self.__cardTreasury, self.__numOfPlayers)
-        self.__players[1].roll_dice()
-        self.__board[self.__players[1].location].player_interaction(self.__players, 1, self.__cardChance, self.__cardTreasury, self.__numOfPlayers)
+        for _ in range(20):
+            for player in self.__players:
+                player.roll_dice()
+                self.__board[self.__players[player.num].location].player_interaction(player)

@@ -13,14 +13,13 @@ class Property(Purchased):
     def color(self):
         return self.__color
 
-    def print_info_about_field(self, players, player_num):
+    def print_info_about_field(self):
         print("{} (арендная плата:{}, цвет:{})".format(self.name, self.rent, self.color))
 
-    def ask_player(self, players, player_num):
-        print("Купить данную улицу?(арендная плата:{}, цвет:{}".format(self.rent, self.color))
-        print("Баланс до покупки:{}".format(players[player_num].balance))
-        print("Баланс после покупки:{}".format(players[player_num].balance-self.cost))
+    def ask_player(self, player):
+        print("Купить данную улицу?(арендная плата:{}, цвет:{})".format(self.rent, self.color))
+        print("Баланс до покупки:{}".format(player.balance))
+        print("Баланс после покупки:{}".format(player.balance-self.cost))
         print("1) Да")
         print("2) Нет")
         return int(input())
-
