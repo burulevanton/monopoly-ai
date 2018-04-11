@@ -11,7 +11,7 @@ class Purchased(Field):
         super().__init__(name, location)
         self.__cost = cost
         self.__rent = rent
-        self.__owner = -1
+        self.__owner = None
 
     @property
     def cost(self):
@@ -22,14 +22,18 @@ class Purchased(Field):
         return self.__owner
 
     @property
-    def rent(self):
+    def start_rent(self):
         return self.__rent
+
+    @property
+    def rent(self):
+        return
 
     def player_interaction(self, player):
         self.print_info(player)
         if self.owner == player:
             print("Игрок {} отдыхает".format(player.name))
-        if self.owner < 0:
+        if not self.owner:
             answer = self.ask_player(player)
             if answer == 1:
                 player.dec_balance(self.cost)
