@@ -1,6 +1,4 @@
 import random
-from game.railway import Railway
-from game.utility import Utility
 
 
 class Player:
@@ -12,6 +10,7 @@ class Player:
         self.__current_location = 0
         self.__in_game = True
         self.__owned_fields = {}
+        self.__mortgage_fields = {}
         self.__current_roll = 0
 
     @property
@@ -42,6 +41,10 @@ class Player:
     def current_roll(self):
         return self.__current_roll
 
+    @property
+    def mortgage_fields(self):
+        return self.__mortgage_fields
+
     def add_balance(self, value):
         self.__current_balance += value
 
@@ -66,15 +69,28 @@ class Player:
             print("Игрок {} проходит поле Вперёд и получает 200".format(self.name))
         else:
             self.location += self.__current_roll
+        return roll1 == roll2
 
     def own_field(self, field):
-        if isinstance(field, Railway):
-            kind = 'railway'
-        elif isinstance(field, Utility):
-            kind = 'utility'
+        if field.kind in self.__owned_fields:
+            self.__owned_fields[field.kind].append(field)
         else:
-            kind = field.color
-        if kind in self.__owned_fields:
-            self.__owned_fields[kind].append(field)
+            self.__owned_fields[field.kind] = [field]
+
+    def mortgage_field(self, field):
+        if field.kind in self.__mortgage_fields:
+            self.__mortgage_fields[field.kind].append(field)
         else:
-            self.__owned_fields[kind] = [field]
+            self.__mortgage_fields[field.kind] = [field]
+        self.__owned_fields[field.kind].remove(field)
+        if len(self.__owned_fields[field.kind]) == 0:
+            del self.__owned_fields[field.kind]
+
+    def redeem_field(self, field):
+        if field.kind in self.__owned_fields:
+            self.__owned_fields[field.kind].append(field)
+        else:
+            self.__owned_fields[field.kind] = [field]
+        self.__mortgage_fields[field.kind].remove(field)
+        if len(self.__mortgage_fields[field.kind]) == 0:
+            del self.__mortgage_fields[field.kind]

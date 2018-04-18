@@ -12,6 +12,10 @@ class Railway(Purchased):
     def rent(self):
         return self.start_rent*(2**(len(self.owner.owned_fields['railway'])-1))
 
+    @property
+    def kind(self):
+        return 'railway'
+
     def print_info_about_field(self):
         print("{}(арендная плата:{})".format(self.name, self.rent))
 

@@ -10,3 +10,4 @@ class Forward(Field):
 
     def player_interaction(self, player):
         self.print_info(player)
+        return False

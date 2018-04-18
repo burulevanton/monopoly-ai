@@ -12,3 +12,4 @@ class FreeParking(Field):
     def player_interaction(self, player: Player):
         self.print_info(player)
         print("Игрок {} отдыхает".format(player.name))
+        return False

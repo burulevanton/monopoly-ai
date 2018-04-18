@@ -14,3 +14,4 @@ class GoToJail(Field):
         print("Игрок {} платит 50".format(player.name))
         player.dec_balance(50)
         player.location = 10
+        return True

@@ -11,3 +11,4 @@ class Jail(Field):
     def player_interaction(self, player):
         self.print_info(player)
         print("Игрок {} просто посетил".format(player.name))
+        return False

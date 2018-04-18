@@ -13,3 +13,4 @@ class Tax(Field):
         self.print_info(player)
         print("Игрок {} платит {}".format(player.name, self.__cost))
         player.dec_balance(self.__cost)
+        return False

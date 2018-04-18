@@ -1,5 +1,4 @@
 from game.purchased import Purchased
-from game.player import Player
 
 # класс Коммунальное предпреятие
 
@@ -10,6 +9,10 @@ class Utility(Purchased):
         super().__init__(name, location, cost, rent)
         self.__rent_lvl_2 = 10
 
+    @property
+    def kind(self):
+        return 'utility'
+
     def player_interaction(self, player):
         self.print_info(player)
         if self.owner == player:
@@ -19,17 +22,18 @@ class Utility(Purchased):
             if answer == 1:
                 player.dec_balance(self.cost)
                 print("Игрок {} покупает поле {} за {}".format(player.name, self.name, self.cost))
-                self.__owner = player
+                self.owner = player
                 player.own_field(self)
             else:
                 return
         elif self.owner != player:
             rent = self.get_rent(player)
-            self.__owner.add_balance(rent)
+            self.owner.add_balance(rent)
             player.dec_balance(rent)
-            print("Игрок {} платит {} за аренду".format(player.name, rent))
+            print("Игрок {} платит {} за аренду владельцу(игроку {})".format(player.name, rent, self.owner.name))
+        return False
 
-    def get_rent(self, player:Player):
+    def get_rent(self, player):
         if len(self.owner.owned_fields['utility']) == 2:
             return self.__rent_lvl_2 * player.current_roll
         else:

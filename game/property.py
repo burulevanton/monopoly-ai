@@ -16,6 +16,7 @@ class Property(Purchased):
         self.__num_of_upgrades = 0
         self.__color = color
         self.__can_upgrade = True
+        self.__can_double_rent = False
 
     @property
     def color(self):
@@ -24,7 +25,7 @@ class Property(Purchased):
     @property
     def rent(self):
         if self.__num_of_upgrades == 0:
-            return self.start_rent
+            return self.start_rent*2 if self.__can_double_rent else self.start_rent
         elif self.__num_of_upgrades == 1:
             return self.__rent_lvl_1
         elif self.__num_of_upgrades == 2:
@@ -33,6 +34,26 @@ class Property(Purchased):
             return self.__rent_lvl_3
         elif self.__num_of_upgrades == 4:
             return self.__rent_lvl_4
+
+    @property
+    def can_upgrade(self):
+        return self.__can_upgrade
+
+    @property
+    def can_double(self):
+        return self.__can_double_rent
+
+    @can_double.setter
+    def can_double(self, value):
+        self.__can_double_rent = value
+
+    @property
+    def kind(self):
+        return self.__color
+
+    @property
+    def has_house(self):
+        return self.__num_of_upgrades > 0
 
     def print_info_about_field(self):
         print("{} (арендная плата:{}, цвет:{})".format(self.name, self.rent, self.color))
@@ -49,3 +70,16 @@ class Property(Purchased):
         self.__num_of_upgrades += 1
         if self.__num_of_upgrades == 4:
             self.__can_upgrade = False
+
+    def mortgage(self):
+        self.is_mortgage = True
+        if self.__num_of_upgrades > 0:
+            self.owner.add_balance(self.__num_of_upgrades*self.__cost_of_upgrade//2)
+        self.__num_of_upgrades = 0
+        self.owner.add_balance(self.cost//2)
+
+    def sell_house(self):
+        if self.__num_of_upgrades == 4:
+            self.__can_upgrade = True
+        self.__num_of_upgrades -= 1
+        self.owner.add_balance(self.__cost_of_upgrade//2)

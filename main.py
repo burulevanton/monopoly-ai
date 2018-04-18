@@ -1,4 +1,4 @@
 from game.game import Game
 
 g = Game()
-g.play_round()
+g.play_game()
