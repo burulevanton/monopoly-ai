@@ -7,10 +7,9 @@ from abc import ABCMeta, abstractmethod
 class Purchased(Field):
     __metaclass__ = ABCMeta
 
-    def __init__(self, name, location, cost, rent):
+    def __init__(self, name, location, cost):
         super().__init__(name, location)
         self.__cost = cost
-        self.__rent = rent
         self.__owner = None
         self.__is_mortgage = False
 
@@ -25,14 +24,6 @@ class Purchased(Field):
     @owner.setter
     def owner(self, value):
         self.__owner = value
-
-    @property
-    def start_rent(self):
-        return self.__rent
-
-    @property
-    def rent(self):
-        return
 
     @property
     def is_mortgage(self):
@@ -60,9 +51,10 @@ class Purchased(Field):
             else:
                 return
         elif self.owner != player and not self.is_mortgage:
-            self.__owner.add_balance(self.rent)
-            player.dec_balance(self.rent)
-            print("Игрок {} платит {} за аренду владельцу(игроку {})".format(player.name, self.rent, self.owner.name))
+            self.__owner.add_balance(self.get_rent())
+            player.dec_balance(self.get_rent())
+            print("Игрок {} платит {} за аренду владельцу(игроку {})".format(player.name, self.get_rent(),
+                                                                             self.owner.name))
         return False
 
     def mortgage(self):
@@ -72,6 +64,10 @@ class Purchased(Field):
     def redeem(self):
         self.is_mortgage = False
         self.owner.dec_balance(int(self.cost//2*1.1))
+
+    @abstractmethod
+    def get_rent(self, *args):
+        pass
 
     @abstractmethod
     def ask_player(self, player):

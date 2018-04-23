@@ -5,9 +5,8 @@ from game.purchased import Purchased
 
 class Utility(Purchased):
 
-    def __init__(self, name, location, cost, rent):
-        super().__init__(name, location, cost, rent)
-        self.__rent_lvl_2 = 10
+    def __init__(self, name, location, cost):
+        super().__init__(name, location, cost)
 
     @property
     def kind(self):
@@ -35,9 +34,9 @@ class Utility(Purchased):
 
     def get_rent(self, player):
         if len(self.owner.owned_fields['utility']) == 2:
-            return self.__rent_lvl_2 * player.current_roll
+            return 10 * player.current_roll
         else:
-            return self.rent*player.current_roll
+            return 4 * player.current_roll
 
     def ask_player(self, player):
         print("Купить данное коммунальное предприятие?")
@@ -48,4 +47,4 @@ class Utility(Purchased):
         return int(input())
 
     def print_info_about_field(self):
-        print("{}(арендная плата:{}*количество очков)".format(self.name, self.rent))
+        print("{}(арендная плата:{}*количество очков)".format(self.name, 4))

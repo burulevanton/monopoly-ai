@@ -5,19 +5,19 @@ from game.purchased import Purchased
 
 class Railway(Purchased):
 
-    def __init__(self, name, location, cost, rent):
-        super().__init__(name, location, cost, rent)
+    def __init__(self, name, location, cost):
+        super().__init__(name, location, cost)
+        self.__rent = 25
 
-    @property
-    def rent(self):
-        return self.start_rent*(2**(len(self.owner.owned_fields['railway'])-1))
+    def get_rent(self):
+        return self.__rent*(2**(len(self.owner.owned_fields['railway'])-1))
 
     @property
     def kind(self):
         return 'railway'
 
     def print_info_about_field(self):
-        print("{}(арендная плата:{})".format(self.name, self.rent))
+        print("{}(арендная плата:{})".format(self.name, self.get_rent()))
 
     def ask_player(self, player):
         print("Купить данную железную дорогу?")

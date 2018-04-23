@@ -10,6 +10,7 @@ from game.public_treasury import PublicTreasury
 from game.railway import Railway
 from game.tax import Tax
 from game.utility import Utility
+from game.purchased import Purchased
 
 
 class Game:
@@ -40,46 +41,176 @@ class Game:
         return available_colors
 
     def init_game_board(self):
-        self.__board.append(Forward("Вперёд", 0))
-        self.__board.append(Property("ул.Житная", 1, 60, 2, 50, 10, 30, 90, 160, "brown"))
-        self.__board.append(PublicTreasury(2))
-        self.__board.append(Property("ул. Нагатинская", 3, 60, 4, 50, 20, 60, 180, 320, "brown"))
-        self.__board.append(Tax("Налог", 4, 200))
-        self.__board.append(Railway("Римская железная дорога", 5, 200, 25))
-        self.__board.append(Property("Варшавское шоссе", 6, 100, 6, 50, 30, 90, 270, 400, "blue"))
-        self.__board.append(Chance(7))
-        self.__board.append(Property("ул. Огарева", 8, 100, 6, 50, 30, 90, 270, 400, "blue"))
-        self.__board.append(Property("ул. Первая парковая", 9, 120, 8, 50, 40, 100, 300, 450, "blue"))
-        self.__board.append(Jail("Тюрьма", 10))
-        self.__board.append(Property("ул. Полянка", 11, 140, 10, 100, 50, 150, 450, 625, "pink"))
-        self.__board.append(Utility("Электроэнергия", 12, 150, 4))
-        self.__board.append(Property("ул. Сретенка", 13, 140, 10, 100, 50, 150, 450, 625, "pink"))
-        self.__board.append(Property("Ростовская набережная", 14, 160, 12, 100, 60, 180, 500, 700, "pink"))
-        self.__board.append(Railway("Курская железная дорога", 15, 200, 25))
-        self.__board.append(Property("Рязанский проспект", 16, 180, 14, 100, 70, 200, 550, 750, 'orange'))
-        self.__board.append(PublicTreasury(17))
-        self.__board.append(Property("ул. Вавилова", 18, 180, 14, 100, 70, 200, 550, 750, 'orange'))
-        self.__board.append(Property("Рублёвское шоссе", 19, 200, 16, 100, 80, 220, 600, 800, 'orange'))
-        self.__board.append(FreeParking("Бесплатная стоянка", 20))
-        self.__board.append(Property("ул. Тверская", 21, 220, 18, 150, 90, 250, 700, 875, 'red'))
-        self.__board.append(Chance(22))
-        self.__board.append(Property("ул. Пушкинская", 23, 220, 18, 150, 90, 250, 700, 875, 'red'))
-        self.__board.append(Property("Площадь Маяковского", 24, 240, 20, 150, 100, 300, 750, 925, 'red'))
-        self.__board.append(Railway("Казанская железная дорога", 25, 200, 25))
-        self.__board.append(Property("ул. Грузинский вал", 26, 260, 22, 150, 110, 330, 800, 975, 'yellow'))
-        self.__board.append(Property("ул. Чайковского", 27, 260, 22, 150, 110, 330, 800, 975, 'yellow'))
-        self.__board.append(Utility("Водопровод", 28, 150, 4))
-        self.__board.append(Property('Смоленская площадь', 29, 280, 24, 150, 120, 360, 850, 1025, 'yellow'))
-        self.__board.append(GoToJail("Отправляйтесь в тюрьму", 30))
-        self.__board.append(Property('ул. Щусева', 31, 300, 26, 200, 130, 390, 900, 1100, 'green'))
-        self.__board.append(Property("Гоголевский бульвар", 32, 300, 26, 200, 130, 390, 900, 1100, 'green'))
-        self.__board.append(PublicTreasury(33))
-        self.__board.append(Property("Кутузовский проспект", 34, 320, 28, 200, 150, 450, 1000, 1200, 'green'))
-        self.__board.append(Railway("Ленинградская железная дорога", 35, 200, 25))
-        self.__board.append(Chance(36))
-        self.__board.append(Property("ул. Малая Бронная", 37, 350, 35, 200, 175, 500, 1100, 1300, 'dark_blue'))
-        self.__board.append(Tax("Сверхналог", 38, 100))
-        self.__board.append(Property("ул. Арбат", 39, 400, 50, 200, 200, 600, 1400, 1700, 'dark_blue'))
+        self.__board.append(Forward(name="Вперёд",
+                                    location=0))
+        self.__board.append(Property(name="ул.Житная",
+                                     location=1,
+                                     cost=60,
+                                     rents=[2, 10, 30, 90, 160],
+                                     cost_of_upgrade=50,
+                                     color="brown"))
+        self.__board.append(PublicTreasury(location=2))
+        self.__board.append(Property(name="ул. Нагатинская",
+                                     location=3,
+                                     cost=60,
+                                     rents=[4, 20, 60, 180, 320],
+                                     cost_of_upgrade=50,
+                                     color="brown"))
+        self.__board.append(Tax(name="Налог",
+                                location=4,
+                                cost=200))
+        self.__board.append(Railway(name="Римская железная дорога",
+                                    location=5,
+                                    cost=200))
+        self.__board.append(Property(name="Варшавское шоссе",
+                                     location=6,
+                                     cost=100,
+                                     rents=[6, 30, 90, 270, 400],
+                                     cost_of_upgrade=50,
+                                     color="blue"))
+        self.__board.append(Chance(location=7))
+        self.__board.append(Property(name="ул. Огарева",
+                                     location=8,
+                                     cost=100,
+                                     rents=[6, 30, 90, 270, 400],
+                                     cost_of_upgrade=50,
+                                     color="blue"))
+        self.__board.append(Property(name="ул. Первая парковая",
+                                     location=9,
+                                     cost=120,
+                                     rents=[8, 40, 100, 300, 450],
+                                     cost_of_upgrade=50,
+                                     color="blue"))
+        self.__board.append(Jail(name="Тюрьма",
+                                 location=10))
+        self.__board.append(Property(name="ул. Полянка",
+                                     location=11,
+                                     cost=140,
+                                     rents=[10, 50, 150, 450, 625],
+                                     cost_of_upgrade=100,
+                                     color="pink"))
+        self.__board.append(Utility(name="Электроэнергия",
+                                    location=12,
+                                    cost=150))
+        self.__board.append(Property(name="ул. Сретенка",
+                                     location=13,
+                                     cost=140,
+                                     rents=[10, 50, 150, 450, 625],
+                                     cost_of_upgrade=100,
+                                     color="pink"))
+        self.__board.append(Property(name="Ростовская набережная",
+                                     location=14,
+                                     cost=160,
+                                     rents=[12, 60, 180, 500, 700],
+                                     cost_of_upgrade=100,
+                                     color="pink"))
+        self.__board.append(Railway(name="Курская железная дорога",
+                                    location=15,
+                                    cost=200))
+        self.__board.append(Property(name="Рязанский проспект",
+                                     location=16,
+                                     cost=180,
+                                     rents=[14, 70, 200, 550, 750],
+                                     cost_of_upgrade=100,
+                                     color='orange'))
+        self.__board.append(PublicTreasury(location=17))
+        self.__board.append(Property(name="ул. Вавилова",
+                                     location=18,
+                                     cost=180,
+                                     rents=[14, 70, 200, 550, 750],
+                                     cost_of_upgrade=100,
+                                     color='orange'))
+        self.__board.append(Property(name="Рублёвское шоссе",
+                                     location=19,
+                                     cost=200,
+                                     rents=[16, 80, 220, 600, 800],
+                                     cost_of_upgrade=100,
+                                     color='orange'))
+        self.__board.append(FreeParking(name="Бесплатная стоянка",
+                                        location=20))
+        self.__board.append(Property(name="ул. Тверская",
+                                     location=21,
+                                     cost=220,
+                                     rents=[18, 90, 250, 700, 875],
+                                     cost_of_upgrade=150,
+                                     color='red'))
+        self.__board.append(Chance(location=22))
+        self.__board.append(Property(name="ул. Пушкинская",
+                                     location=23,
+                                     cost=220,
+                                     rents=[18, 90, 250, 700, 875],
+                                     cost_of_upgrade=150,
+                                     color='red'))
+        self.__board.append(Property(name="Площадь Маяковского",
+                                     location=24,
+                                     cost=240,
+                                     rents=[20, 100, 300, 750, 925],
+                                     cost_of_upgrade=150,
+                                     color='red'))
+        self.__board.append(Railway(name="Казанская железная дорога",
+                                    location=25,
+                                    cost=200))
+        self.__board.append(Property(name="ул. Грузинский вал",
+                                     location=26,
+                                     cost=260,
+                                     rents=[22, 110, 330, 800, 975],
+                                     cost_of_upgrade=150,
+                                     color='yellow'))
+        self.__board.append(Property(name="ул. Чайковского",
+                                     location=27,
+                                     cost=260,
+                                     rents=[22, 110, 330, 800, 975],
+                                     cost_of_upgrade=150,
+                                     color='yellow'))
+        self.__board.append(Utility(name="Водопровод",
+                                    location=28,
+                                    cost=150))
+        self.__board.append(Property(name='Смоленская площадь',
+                                     location=29,
+                                     cost=280,
+                                     rents=[24, 120, 360, 850, 1025],
+                                     cost_of_upgrade=150,
+                                     color='yellow'))
+        self.__board.append(GoToJail(name="Отправляйтесь в тюрьму",
+                                     location=30))
+        self.__board.append(Property(name='ул. Щусева',
+                                     location=31,
+                                     cost=300,
+                                     rents=[26, 130, 390, 900, 1100],
+                                     cost_of_upgrade=200,
+                                     color='green'))
+        self.__board.append(Property(name="Гоголевский бульвар",
+                                     location=32,
+                                     cost=300,
+                                     rents=[26, 130, 390, 900, 1100],
+                                     cost_of_upgrade=200,
+                                     color='green'))
+        self.__board.append(PublicTreasury(location=33))
+        self.__board.append(Property(name="Кутузовский проспект",
+                                     location=34,
+                                     cost=320,
+                                     rents=[28, 150, 450, 1000, 1200],
+                                     cost_of_upgrade=200,
+                                     color='green'))
+        self.__board.append(Railway(name="Ленинградская железная дорога",
+                                    location=35,
+                                    cost=200))
+        self.__board.append(Chance(location=36))
+        self.__board.append(Property(name="ул. Малая Бронная",
+                                     location=37,
+                                     cost=350,
+                                     rents=[35, 175, 500, 1100, 1300],
+                                     cost_of_upgrade=200,
+                                     color='dark_blue'))
+        self.__board.append(Tax(name="Сверхналог",
+                                location=38,
+                                cost=100))
+        self.__board.append(Property(name="ул. Арбат",
+                                     location=39,
+                                     cost=400,
+                                     rents=[50, 200, 600, 1400, 1700],
+                                     cost_of_upgrade=200,
+                                     color='dark_blue'))
 
     def set_num_of_players(self):
         print("Введите количество игроков:")
