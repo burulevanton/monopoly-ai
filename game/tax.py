@@ -11,5 +11,5 @@ class Tax(Field):
 
     def landed_on(self, game, player):
         self.print_info(player)
-        game.take_money_from_player(self.__cost)
+        game.take_money_from_player(player, self.__cost)
         return False

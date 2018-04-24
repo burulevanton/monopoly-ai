@@ -1,4 +1,3 @@
-import random
 
 
 class Player:
@@ -6,7 +5,7 @@ class Player:
     def __init__(self, player_name, player_num):
         self.__player_name = player_name
         self.__player_num = player_num
-        self.__current_balance = 150000
+        self.__current_balance = 100
         self.__current_location = 0
         self.__in_game = True
         self.__owned_fields = {}
@@ -36,6 +35,14 @@ class Player:
     @balance.setter
     def balance(self, value):
         self.__current_balance = value
+
+    @property
+    def net_worth(self):
+        value_of_properties = 0
+        for fields in self.owned_fields.values():
+            for field in fields:
+                value_of_properties += field.current_value
+        return value_of_properties + self.balance
 
     @property
     def owned_fields(self):

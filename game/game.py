@@ -268,20 +268,32 @@ class Game:
             player.location += self.__current_roll
         return roll1 == roll2
 
-    def give_money_to_player(self, player:Player, amount):
+    @staticmethod
+    def give_money_to_player(player: Player, amount):
         player.balance += amount
         logging.info('Игрок {} получает {}Р'.format(player.name, amount))
 
     def take_money_from_player(self, player: Player, amount):
         if player.balance - amount < 0:
             logging.info('Игрок {} не может выплатить {}Р'.format(player.name, amount))
-            return False
+            if player.net_worth - amount < 0:
+                logging.info('Игрок {} становится банкротом'.format(player))
+                return False
+            else:
+                logging.info('Игроку [} хватит денег если он заложит/продаст что-то из своих активов'.format(player))
+                self.ask_sell(player)
+                self.ask_mortgage(player)
+                if player.balance - amount < 0:
+                    logging.info('Игрок {} становится банкротом'.format(player))
+                    return False
+                self.take_money_from_player(player, amount)
         player.balance -= amount
         logging.info('Игрок {} платит {}Р'.format(player.name, amount))
         return True
 
     def transfer_money_between_players(self, from_player: Player, to_player: Player, amount):
         if not self.take_money_from_player(from_player, amount):
+            
             return False
         self.give_money_to_player(to_player, amount)
 
@@ -289,21 +301,46 @@ class Game:
         action = self._offer_property_to_current_player(current_player, field)
         if action:
             return
-
-        self._offer_property_to_auction(field)
+        interested_players = []
+        for player in self.__players:
+            if not player == current_player:
+                interested_players.append(player)
+        multiplier = 0.8
+        while len(interested_players) > 1:
+            multiplier += 0.2
+            interested_players = self._offer_property_to_auction(interested_players, field, multiplier)
+        if len(interested_players) == 1:
+            player = interested_players[0]
+            self.take_money_from_player(player, field.cost*multiplier)
+            logging.info('Игрок {} покупает поле {}  за {}'.format(player, field.name, field.cost*multiplier))
+            field.owner = interested_players[0]
+            player.own_field(field)
+        else:
+            logging.info('Никто не заинтересован в поле {}'.format(field.name))
 
     def _offer_property_to_current_player(self, current_player, field):
         answer = field.ask_player(current_player)
         if answer == 1:
-            self.take_money_from_player(current_player, field.cost)
-            print("Игрок {} покупает поле {} за {}".format(current_player.name, field.name, field.cost))
-            field.owner = current_player
-            current_player.own_field(field)
-            return True
+            if self.take_money_from_player(current_player, field.cost):
+                print("Игрок {} покупает поле {} за {}".format(current_player.name, field.name, field.cost))
+                field.owner = current_player
+                current_player.own_field(field)
+                return True
         return False
 
-    def _offer_property_to_auction(self, field):
-        pass
+    @staticmethod
+    def _offer_property_to_auction(interested_players, field, multiplier):
+        new_interested_players = []
+        for player in interested_players:
+            logging.info('Игрок {} хотите ли купить поле {} за {}Р?'.format(player, field.name,
+                                                                            int(field.cost*multiplier)))
+            answer = int(input())
+            if answer == 1:
+                new_interested_players.append(player)
+                logging.info('Игрок {} заинтересован'.format(player))
+            else:
+                logging.info('Игрок {} не заинтересован'.format(player))
+        return new_interested_players
 
     def ask_upgrade(self, player: Player):
         available_colors = self.available_color_to_upgrade(player.owned_fields, player.mortgage_fields)

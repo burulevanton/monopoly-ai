@@ -1,5 +1,4 @@
 from game.field import Field
-from game.player import Player
 
 # класс, отвечающий за поле "Бесплатная стоянка"
 

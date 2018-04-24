@@ -48,6 +48,10 @@ class Street(Property):
     def cost_of_upgrade(self):
         return self.__cost_of_upgrade
 
+    @property
+    def current_value(self):
+        return self.cost//2 + self.__num_of_upgrades*self.cost_of_upgrade//2
+
     def print_info_about_field(self):
         print("{} (арендная плата:{}, цвет:{})".format(self.name, self.get_rent(), self.color))
 

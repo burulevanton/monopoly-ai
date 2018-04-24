@@ -41,6 +41,10 @@ class Property(Field):
     def redeem_cost(self):
         return int(self.cost//2*1.1)
 
+    @property
+    def current_value(self):
+        return self.cost//2
+
     def landed_on(self, game, player):
         self.print_info(player)
         if self.owner == player:
@@ -49,9 +53,9 @@ class Property(Field):
             game.offer_property_to_buy(player, self)
         elif self.owner != player and not self.is_mortgage:
             rent = self.get_rent(player) if self.kind == 'utility' else self.get_rent()
-            game.transfer_money_between_players(from_player=player, to_player=self.owner, amount=rent)
-            print("Игрок {} платит {} за аренду владельцу(игроку {})".format(player.name, rent,
-                                                                             self.owner.name))
+            if game.transfer_money_between_players(from_player=player, to_player=self.owner, amount=rent):
+                print("Игрок {} платит {} за аренду владельцу(игроку {})".format(player.name, rent,
+                                                                                 self.owner.name))
         return False
 
     def mortgage(self):
