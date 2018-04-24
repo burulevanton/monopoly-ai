@@ -5,12 +5,16 @@ from game.free_parking import FreeParking
 from game.go_to_jail import GoToJail
 from game.jail import Jail
 from game.player import Player
-from game.property import Property
+from game.street import Street
 from game.public_treasury import PublicTreasury
 from game.railway import Railway
 from game.tax import Tax
 from game.utility import Utility
-from game.purchased import Purchased
+import logging
+import random
+
+logging.basicConfig(format=u'%(filename)s[:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+                    level=logging.DEBUG)
 
 
 class Game:
@@ -19,10 +23,15 @@ class Game:
         self.__board = []
         self.__players = []
         self.__numOfPlayers = 0
+        self.__current_roll = 0
         self.__double_in_a_row = 0
         self.set_num_of_players()
         self.init_game_board()
         self.set_players()
+
+    @property
+    def current_roll(self):
+        return self.__current_roll
 
     @staticmethod
     def num_field_color(color):
@@ -43,174 +52,174 @@ class Game:
     def init_game_board(self):
         self.__board.append(Forward(name="Вперёд",
                                     location=0))
-        self.__board.append(Property(name="ул.Житная",
-                                     location=1,
-                                     cost=60,
-                                     rents=[2, 10, 30, 90, 160],
-                                     cost_of_upgrade=50,
-                                     color="brown"))
+        self.__board.append(Street(name="ул.Житная",
+                                        location=1,
+                                        cost=60,
+                                        rents=[2, 10, 30, 90, 160],
+                                        cost_of_upgrade=50,
+                                        color="brown"))
         self.__board.append(PublicTreasury(location=2))
-        self.__board.append(Property(name="ул. Нагатинская",
-                                     location=3,
-                                     cost=60,
-                                     rents=[4, 20, 60, 180, 320],
-                                     cost_of_upgrade=50,
-                                     color="brown"))
+        self.__board.append(Street(name="ул. Нагатинская",
+                                        location=3,
+                                        cost=60,
+                                        rents=[4, 20, 60, 180, 320],
+                                        cost_of_upgrade=50,
+                                        color="brown"))
         self.__board.append(Tax(name="Налог",
                                 location=4,
                                 cost=200))
         self.__board.append(Railway(name="Римская железная дорога",
                                     location=5,
                                     cost=200))
-        self.__board.append(Property(name="Варшавское шоссе",
-                                     location=6,
-                                     cost=100,
-                                     rents=[6, 30, 90, 270, 400],
-                                     cost_of_upgrade=50,
-                                     color="blue"))
+        self.__board.append(Street(name="Варшавское шоссе",
+                                        location=6,
+                                        cost=100,
+                                        rents=[6, 30, 90, 270, 400],
+                                        cost_of_upgrade=50,
+                                        color="blue"))
         self.__board.append(Chance(location=7))
-        self.__board.append(Property(name="ул. Огарева",
-                                     location=8,
-                                     cost=100,
-                                     rents=[6, 30, 90, 270, 400],
-                                     cost_of_upgrade=50,
-                                     color="blue"))
-        self.__board.append(Property(name="ул. Первая парковая",
-                                     location=9,
-                                     cost=120,
-                                     rents=[8, 40, 100, 300, 450],
-                                     cost_of_upgrade=50,
-                                     color="blue"))
+        self.__board.append(Street(name="ул. Огарева",
+                                        location=8,
+                                        cost=100,
+                                        rents=[6, 30, 90, 270, 400],
+                                        cost_of_upgrade=50,
+                                        color="blue"))
+        self.__board.append(Street(name="ул. Первая парковая",
+                                        location=9,
+                                        cost=120,
+                                        rents=[8, 40, 100, 300, 450],
+                                        cost_of_upgrade=50,
+                                        color="blue"))
         self.__board.append(Jail(name="Тюрьма",
                                  location=10))
-        self.__board.append(Property(name="ул. Полянка",
-                                     location=11,
-                                     cost=140,
-                                     rents=[10, 50, 150, 450, 625],
-                                     cost_of_upgrade=100,
-                                     color="pink"))
+        self.__board.append(Street(name="ул. Полянка",
+                                        location=11,
+                                        cost=140,
+                                        rents=[10, 50, 150, 450, 625],
+                                        cost_of_upgrade=100,
+                                        color="pink"))
         self.__board.append(Utility(name="Электроэнергия",
                                     location=12,
                                     cost=150))
-        self.__board.append(Property(name="ул. Сретенка",
-                                     location=13,
-                                     cost=140,
-                                     rents=[10, 50, 150, 450, 625],
-                                     cost_of_upgrade=100,
-                                     color="pink"))
-        self.__board.append(Property(name="Ростовская набережная",
-                                     location=14,
-                                     cost=160,
-                                     rents=[12, 60, 180, 500, 700],
-                                     cost_of_upgrade=100,
-                                     color="pink"))
+        self.__board.append(Street(name="ул. Сретенка",
+                                        location=13,
+                                        cost=140,
+                                        rents=[10, 50, 150, 450, 625],
+                                        cost_of_upgrade=100,
+                                        color="pink"))
+        self.__board.append(Street(name="Ростовская набережная",
+                                        location=14,
+                                        cost=160,
+                                        rents=[12, 60, 180, 500, 700],
+                                        cost_of_upgrade=100,
+                                        color="pink"))
         self.__board.append(Railway(name="Курская железная дорога",
                                     location=15,
                                     cost=200))
-        self.__board.append(Property(name="Рязанский проспект",
-                                     location=16,
-                                     cost=180,
-                                     rents=[14, 70, 200, 550, 750],
-                                     cost_of_upgrade=100,
-                                     color='orange'))
+        self.__board.append(Street(name="Рязанский проспект",
+                                        location=16,
+                                        cost=180,
+                                        rents=[14, 70, 200, 550, 750],
+                                        cost_of_upgrade=100,
+                                        color='orange'))
         self.__board.append(PublicTreasury(location=17))
-        self.__board.append(Property(name="ул. Вавилова",
-                                     location=18,
-                                     cost=180,
-                                     rents=[14, 70, 200, 550, 750],
-                                     cost_of_upgrade=100,
-                                     color='orange'))
-        self.__board.append(Property(name="Рублёвское шоссе",
-                                     location=19,
-                                     cost=200,
-                                     rents=[16, 80, 220, 600, 800],
-                                     cost_of_upgrade=100,
-                                     color='orange'))
+        self.__board.append(Street(name="ул. Вавилова",
+                                        location=18,
+                                        cost=180,
+                                        rents=[14, 70, 200, 550, 750],
+                                        cost_of_upgrade=100,
+                                        color='orange'))
+        self.__board.append(Street(name="Рублёвское шоссе",
+                                        location=19,
+                                        cost=200,
+                                        rents=[16, 80, 220, 600, 800],
+                                        cost_of_upgrade=100,
+                                        color='orange'))
         self.__board.append(FreeParking(name="Бесплатная стоянка",
                                         location=20))
-        self.__board.append(Property(name="ул. Тверская",
-                                     location=21,
-                                     cost=220,
-                                     rents=[18, 90, 250, 700, 875],
-                                     cost_of_upgrade=150,
-                                     color='red'))
+        self.__board.append(Street(name="ул. Тверская",
+                                        location=21,
+                                        cost=220,
+                                        rents=[18, 90, 250, 700, 875],
+                                        cost_of_upgrade=150,
+                                        color='red'))
         self.__board.append(Chance(location=22))
-        self.__board.append(Property(name="ул. Пушкинская",
-                                     location=23,
-                                     cost=220,
-                                     rents=[18, 90, 250, 700, 875],
-                                     cost_of_upgrade=150,
-                                     color='red'))
-        self.__board.append(Property(name="Площадь Маяковского",
-                                     location=24,
-                                     cost=240,
-                                     rents=[20, 100, 300, 750, 925],
-                                     cost_of_upgrade=150,
-                                     color='red'))
+        self.__board.append(Street(name="ул. Пушкинская",
+                                        location=23,
+                                        cost=220,
+                                        rents=[18, 90, 250, 700, 875],
+                                        cost_of_upgrade=150,
+                                        color='red'))
+        self.__board.append(Street(name="Площадь Маяковского",
+                                        location=24,
+                                        cost=240,
+                                        rents=[20, 100, 300, 750, 925],
+                                        cost_of_upgrade=150,
+                                        color='red'))
         self.__board.append(Railway(name="Казанская железная дорога",
                                     location=25,
                                     cost=200))
-        self.__board.append(Property(name="ул. Грузинский вал",
-                                     location=26,
-                                     cost=260,
-                                     rents=[22, 110, 330, 800, 975],
-                                     cost_of_upgrade=150,
-                                     color='yellow'))
-        self.__board.append(Property(name="ул. Чайковского",
-                                     location=27,
-                                     cost=260,
-                                     rents=[22, 110, 330, 800, 975],
-                                     cost_of_upgrade=150,
-                                     color='yellow'))
+        self.__board.append(Street(name="ул. Грузинский вал",
+                                        location=26,
+                                        cost=260,
+                                        rents=[22, 110, 330, 800, 975],
+                                        cost_of_upgrade=150,
+                                        color='yellow'))
+        self.__board.append(Street(name="ул. Чайковского",
+                                        location=27,
+                                        cost=260,
+                                        rents=[22, 110, 330, 800, 975],
+                                        cost_of_upgrade=150,
+                                        color='yellow'))
         self.__board.append(Utility(name="Водопровод",
                                     location=28,
                                     cost=150))
-        self.__board.append(Property(name='Смоленская площадь',
-                                     location=29,
-                                     cost=280,
-                                     rents=[24, 120, 360, 850, 1025],
-                                     cost_of_upgrade=150,
-                                     color='yellow'))
+        self.__board.append(Street(name='Смоленская площадь',
+                                        location=29,
+                                        cost=280,
+                                        rents=[24, 120, 360, 850, 1025],
+                                        cost_of_upgrade=150,
+                                        color='yellow'))
         self.__board.append(GoToJail(name="Отправляйтесь в тюрьму",
                                      location=30))
-        self.__board.append(Property(name='ул. Щусева',
-                                     location=31,
-                                     cost=300,
-                                     rents=[26, 130, 390, 900, 1100],
-                                     cost_of_upgrade=200,
-                                     color='green'))
-        self.__board.append(Property(name="Гоголевский бульвар",
-                                     location=32,
-                                     cost=300,
-                                     rents=[26, 130, 390, 900, 1100],
-                                     cost_of_upgrade=200,
-                                     color='green'))
+        self.__board.append(Street(name='ул. Щусева',
+                                        location=31,
+                                        cost=300,
+                                        rents=[26, 130, 390, 900, 1100],
+                                        cost_of_upgrade=200,
+                                        color='green'))
+        self.__board.append(Street(name="Гоголевский бульвар",
+                                        location=32,
+                                        cost=300,
+                                        rents=[26, 130, 390, 900, 1100],
+                                        cost_of_upgrade=200,
+                                        color='green'))
         self.__board.append(PublicTreasury(location=33))
-        self.__board.append(Property(name="Кутузовский проспект",
-                                     location=34,
-                                     cost=320,
-                                     rents=[28, 150, 450, 1000, 1200],
-                                     cost_of_upgrade=200,
-                                     color='green'))
+        self.__board.append(Street(name="Кутузовский проспект",
+                                        location=34,
+                                        cost=320,
+                                        rents=[28, 150, 450, 1000, 1200],
+                                        cost_of_upgrade=200,
+                                        color='green'))
         self.__board.append(Railway(name="Ленинградская железная дорога",
                                     location=35,
                                     cost=200))
         self.__board.append(Chance(location=36))
-        self.__board.append(Property(name="ул. Малая Бронная",
-                                     location=37,
-                                     cost=350,
-                                     rents=[35, 175, 500, 1100, 1300],
-                                     cost_of_upgrade=200,
-                                     color='dark_blue'))
+        self.__board.append(Street(name="ул. Малая Бронная",
+                                        location=37,
+                                        cost=350,
+                                        rents=[35, 175, 500, 1100, 1300],
+                                        cost_of_upgrade=200,
+                                        color='dark_blue'))
         self.__board.append(Tax(name="Сверхналог",
                                 location=38,
                                 cost=100))
-        self.__board.append(Property(name="ул. Арбат",
-                                     location=39,
-                                     cost=400,
-                                     rents=[50, 200, 600, 1400, 1700],
-                                     cost_of_upgrade=200,
-                                     color='dark_blue'))
+        self.__board.append(Street(name="ул. Арбат",
+                                        location=39,
+                                        cost=400,
+                                        rents=[50, 200, 600, 1400, 1700],
+                                        cost_of_upgrade=200,
+                                        color='dark_blue'))
 
     def set_num_of_players(self):
         print("Введите количество игроков:")
@@ -225,18 +234,17 @@ class Game:
     def play_game(self):
         for _ in range(100):
             for player in self.__players:
-                self.play_round(player)
                 self.ask_upgrade(player)
                 self.ask_mortgage(player)
                 self.ask_redeem(player)
                 self.ask_sell(player)
-                self.check_fill_color(player)
-            self.print_info()
+                self.play_round(player)
 
     def play_round(self, player):
-        is_double = player.roll_dice()
-        if self.__board[self.__players[player.num].location].player_interaction(player):
-            self.__board[self.__players[player.num].location].player_interaction(player)
+        is_double = self.roll_dice_and_move(player)
+        if self.__board[self.__players[player.num].location].landed_on(self, player):
+            self.__board[self.__players[player.num].location].landed_on(self, player)
+        self.check_fill_color(player)
         if is_double:
             self.__double_in_a_row += 1
             if self.__double_in_a_row == 3:
@@ -247,12 +255,55 @@ class Game:
                 self.play_round(player)
         self.__double_in_a_row = 0
 
-    def print_info(self):
-        f = open('info.txt', 'w')
-        for player in self.__players:
-            f.write('Player {}\n'.format(player.name))
-            f.write(str(player.owned_fields))
-        f.close()
+    def roll_dice_and_move(self, player):
+        roll1 = random.randint(1, 6)
+        roll2 = random.randint(1, 6)
+        logging.info("Игрок {} выбрасывает {} и {}".format(player, roll1, roll2))
+        self.__current_roll = roll1 + roll2
+        if player.location + self.__current_roll > 39:
+            player.location = player.location + roll1 + roll2 - 40
+            logging.info("Игрок {} проходит поле Вперёд".format(player))
+            self.give_money_to_player(player, 200)
+        else:
+            player.location += self.__current_roll
+        return roll1 == roll2
+
+    def give_money_to_player(self, player:Player, amount):
+        player.balance += amount
+        logging.info('Игрок {} получает {}Р'.format(player.name, amount))
+
+    def take_money_from_player(self, player: Player, amount):
+        if player.balance - amount < 0:
+            logging.info('Игрок {} не может выплатить {}Р'.format(player.name, amount))
+            return False
+        player.balance -= amount
+        logging.info('Игрок {} платит {}Р'.format(player.name, amount))
+        return True
+
+    def transfer_money_between_players(self, from_player: Player, to_player: Player, amount):
+        if not self.take_money_from_player(from_player, amount):
+            return False
+        self.give_money_to_player(to_player, amount)
+
+    def offer_property_to_buy(self, current_player, field):
+        action = self._offer_property_to_current_player(current_player, field)
+        if action:
+            return
+
+        self._offer_property_to_auction(field)
+
+    def _offer_property_to_current_player(self, current_player, field):
+        answer = field.ask_player(current_player)
+        if answer == 1:
+            self.take_money_from_player(current_player, field.cost)
+            print("Игрок {} покупает поле {} за {}".format(current_player.name, field.name, field.cost))
+            field.owner = current_player
+            current_player.own_field(field)
+            return True
+        return False
+
+    def _offer_property_to_auction(self, field):
+        pass
 
     def ask_upgrade(self, player: Player):
         available_colors = self.available_color_to_upgrade(player.owned_fields, player.mortgage_fields)
@@ -275,12 +326,12 @@ class Game:
                 if answer == 0:
                     return
                 else:
-                    available_fields[answer-1].upgrade()
-                    self.ask_upgrade(player)
+                    if self.take_money_from_player(player, available_fields[answer-1].cost_of_upgrade):
+                        available_fields[answer-1].upgrade()
+                        self.check_fill_color(player)
+                        self.ask_upgrade(player)
 
-    @staticmethod
-    def ask_mortgage(player: Player):
-        print('Mortgage')
+    def ask_mortgage(self, player: Player):
         i = 0
         all_fields = []
         for fields in player.owned_fields.values():
@@ -294,12 +345,13 @@ class Game:
             if answer == 0:
                 return
             else:
+                amount = all_fields[answer - 1].mortgage()
+                self.give_money_to_player(player, amount)
                 player.mortgage_field(all_fields[answer-1])
-                all_fields[answer-1].mortgage()
-                Game.ask_mortgage(player)
+                Game.check_fill_color(player)
+                self.ask_mortgage(player)
 
-    @staticmethod
-    def ask_redeem(player: Player):
+    def ask_redeem(self, player: Player):
         i = 0
         all_fields = []
         for fields in player.mortgage_fields.values():
@@ -313,12 +365,13 @@ class Game:
             if answer == 0:
                 return
             else:
-                player.redeem_field(all_fields[i-1])
-                all_fields[answer-1].redeem()
-                Game.ask_redeem(player)
+                if self.take_money_from_player(player, all_fields[answer-1].redeem_cost):
+                    player.redeem_field(all_fields[answer-1])
+                    all_fields[answer-1].redeem()
+                    Game.check_fill_color(player)
+                    self.ask_redeem(player)
 
-    @staticmethod
-    def ask_sell(player: Player):
+    def ask_sell(self, player: Player):
         i = 0
         fields_with_house = []
         for fields in player.owned_fields.values():
@@ -334,8 +387,10 @@ class Game:
             if answer == 0:
                 return
             else:
-                fields_with_house[answer-1].sell_house()
-                Game.ask_sell(player)
+                amount = fields_with_house[answer-1].sell_house()
+                self.give_money_to_player(player, amount)
+                Game.check_fill_color(player)
+                self.ask_sell(player)
 
     @staticmethod
     def check_fill_color(player: Player):

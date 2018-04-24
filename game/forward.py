@@ -8,6 +8,6 @@ class Forward(Field):
     def __init__(self, name, location):
         super().__init__(name, location)
 
-    def player_interaction(self, player):
+    def landed_on(self, game, player):
         self.print_info(player)
         return False

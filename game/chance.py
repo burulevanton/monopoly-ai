@@ -9,7 +9,7 @@ class Chance(Field):
     def __init__(self, location):
         super().__init__("Шанс", location)
 
-    def player_interaction(self, player):
+    def landed_on(self, game, player):
         self.print_info(player)
         num_card = random.randint(1, 14)
         print("Игрок берёт карточку №{}".format(num_card))
@@ -24,7 +24,7 @@ class Chance(Field):
             else:
                 print("Игрок {} проходит поле Вперёд и получает 200".format(player.name))
                 player.location = 11
-                player.add_balance(200)
+                game.give_money_to_player(player, 200)
             return True
         elif num_card == 3 or num_card == 8:
             print('Отправляйтесь на ближайщую станцию')
@@ -35,11 +35,11 @@ class Chance(Field):
             if player.location == 36:
                 print("Игрок {} проходит поле Вперёд и получает 200".format(player.name))
                 player.location = 5
-                player.add_balance(200)
+                game.give_money_to_player(player, 200)
             return True
         elif num_card == 4:
             print('Банк платит вам 50')
-            player.add_balance(50)
+            game.give_money_to_player(player, 200)
             return False
         elif num_card == 5:
             print('Идите на ближайшее поле коммунального предприятия')
@@ -50,7 +50,7 @@ class Chance(Field):
             if player.location == 36:
                 player.location = 12
                 print("Игрок {} проходит поле Вперёд и получает 200".format(player.name))
-                player.add_balance(200)
+                game.give_money_to_player(player, 200)
             return False
         elif num_card == 6:
             print('Отправляйтесь в тюрьму')
@@ -60,11 +60,11 @@ class Chance(Field):
             print('Отправляйтесь поездом до станции Римская Железная дорога')
             player.location = 5
             print("Игрок {} проходит поле Вперёд и получает 200".format(player.name))
-            player.add_balance(200)
+            game.give_money_to_player(player, 200)
             return True
         elif num_card == 9:
             print('Штраф 15')
-            player.dec_balance(15)
+            game.take_money_from_player(player, 15)
             return False
         elif num_card == 10:
             print('Отправляйтесь на бесплатную стоянку')
@@ -73,11 +73,11 @@ class Chance(Field):
             else:
                 print("Игрок {} проходит поле Вперёд и получает 200".format(player.name))
                 player.location = 20
-                player.add_balance(200)
+                game.give_money_to_player(player, 200)
             return True
         elif num_card == 11:
             print('Получите 150')
-            player.add_balance(150)
+            game.give_money_to_player(player, 150)
         elif num_card == 12:
             print('Отправляйтесь на площадь Маяковского')
             if player.location == 7 or player.location == 22:
@@ -85,7 +85,7 @@ class Chance(Field):
             else:
                 player.location = 24
                 print("Игрок {} проходит поле Вперёд и получает 200".format(player.name))
-                player.add_balance(200)
+                game.give_money_to_player(player, 200)
             return True
         elif num_card == 13:
             print('Вернитесь на три поля назад')
@@ -94,6 +94,6 @@ class Chance(Field):
         elif num_card == 14:
             print('Идите на поле Вперёд')
             player.location = 0
-            player.add_balance(200)
+            game.give_money_to_player(player, 200)
             print("Игрок {} проходит поле Вперёд и получает 200".format(player.name))
             return True

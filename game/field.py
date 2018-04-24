@@ -14,7 +14,7 @@ class Field:
         print("Игрок {} попал на поле {}".format(player.name, self.name))
 
     @abstractmethod
-    def player_interaction(self, player):
+    def landed_on(self, game, player):
         pass
 
     @property

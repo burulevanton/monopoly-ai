@@ -1,9 +1,9 @@
-from game.purchased import Purchased
+from game.property import Property
 
 # класс "Железная дорога"
 
 
-class Railway(Purchased):
+class Railway(Property):
 
     def __init__(self, name, location, cost):
         super().__init__(name, location, cost)

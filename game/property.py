@@ -1,74 +1,74 @@
-from game.purchased import Purchased
+from game.field import Field
+from abc import ABCMeta, abstractmethod
 
-# класс, отвечающий за поля недвижимости
+# абстрактный класс, отвечающий за приобретаемые ячейки поля
 
 
-class Property(Purchased):
+class Property(Field):
+    __metaclass__ = ABCMeta
 
-    def __init__(self, name, location, cost, rents, cost_of_upgrade, color):
-        super().__init__(name, location, cost)
-        self.__cost_of_upgrade = cost_of_upgrade
-        self.__rents = rents
-        self.__num_of_upgrades = 0
-        self.__color = color
-        self.__can_upgrade = True
-        self.__can_double_rent = False
-
-    @property
-    def color(self):
-        return self.__color
-
-    def get_rent(self):
-        if self.__num_of_upgrades == 0:
-            return self.__rents[0]*2 if self.__can_double_rent else self.__rents[0]
-        else:
-            return self.__rents[self.__num_of_upgrades]
+    def __init__(self, name, location, cost):
+        super().__init__(name, location)
+        self.__cost = cost
+        self.__owner = None
+        self.__is_mortgage = False
 
     @property
-    def can_upgrade(self):
-        return self.__can_upgrade
+    def cost(self):
+        return self.__cost
 
     @property
-    def can_double(self):
-        return self.__can_double_rent
+    def owner(self):
+        return self.__owner
 
-    @can_double.setter
-    def can_double(self, value):
-        self.__can_double_rent = value
+    @owner.setter
+    def owner(self, value):
+        self.__owner = value
+
+    @property
+    def is_mortgage(self):
+        return self.__is_mortgage
+
+    @is_mortgage.setter
+    def is_mortgage(self, value):
+        self.__is_mortgage = value
 
     @property
     def kind(self):
-        return self.__color
+        return
 
     @property
-    def has_house(self):
-        return self.__num_of_upgrades > 0
+    def redeem_cost(self):
+        return int(self.cost//2*1.1)
 
-    def print_info_about_field(self):
-        print("{} (арендная плата:{}, цвет:{})".format(self.name, self.get_rent(), self.color))
-
-    def ask_player(self, player):
-        print("Купить данную улицу?(арендная плата:{}, цвет:{})".format(self.get_rent(), self.color))
-        print("Баланс до покупки:{}".format(player.balance))
-        print("Баланс после покупки:{}".format(player.balance-self.cost))
-        print("1) Да")
-        print("2) Нет")
-        return int(input())
-
-    def upgrade(self):
-        self.__num_of_upgrades += 1
-        if self.__num_of_upgrades == 4:
-            self.__can_upgrade = False
+    def landed_on(self, game, player):
+        self.print_info(player)
+        if self.owner == player:
+            print("Игрок {} отдыхает".format(player.name))
+        if not self.owner:
+            game.offer_property_to_buy(player, self)
+        elif self.owner != player and not self.is_mortgage:
+            rent = self.get_rent(player) if self.kind == 'utility' else self.get_rent()
+            game.transfer_money_between_players(from_player=player, to_player=self.owner, amount=rent)
+            print("Игрок {} платит {} за аренду владельцу(игроку {})".format(player.name, rent,
+                                                                             self.owner.name))
+        return False
 
     def mortgage(self):
         self.is_mortgage = True
-        if self.__num_of_upgrades > 0:
-            self.owner.add_balance(self.__num_of_upgrades*self.__cost_of_upgrade//2)
-        self.__num_of_upgrades = 0
-        self.owner.add_balance(self.cost//2)
+        return self.cost//2
 
-    def sell_house(self):
-        if self.__num_of_upgrades == 4:
-            self.__can_upgrade = True
-        self.__num_of_upgrades -= 1
-        self.owner.add_balance(self.__cost_of_upgrade//2)
+    def redeem(self):
+        self.is_mortgage = False
+
+    @abstractmethod
+    def get_rent(self, *args):
+        pass
+
+    @abstractmethod
+    def ask_player(self, player):
+        pass
+
+    @abstractmethod
+    def print_info_about_field(self):
+        pass

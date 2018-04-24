@@ -9,8 +9,7 @@ class Tax(Field):
         super().__init__(name, location)
         self.__cost = cost
 
-    def player_interaction(self, player):
+    def landed_on(self, game, player):
         self.print_info(player)
-        print("Игрок {} платит {}".format(player.name, self.__cost))
-        player.dec_balance(self.__cost)
+        game.take_money_from_player(self.__cost)
         return False
