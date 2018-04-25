@@ -13,7 +13,7 @@ from game.utility import Utility
 import logging
 import random
 
-logging.basicConfig(format=u'%(filename)s[:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+logging.basicConfig(format=u'%(filename)s[%(lineno)d]# [%(name)s] %(levelname)s [%(asctime)s]  %(message)s',
                     level=logging.DEBUG)
 
 
@@ -22,9 +22,11 @@ class Game:
     def __init__(self):
         self.__board = []
         self.__players = []
+        self.__bankrupt_players = []
         self.__numOfPlayers = 0
         self.__current_roll = 0
         self.__double_in_a_row = 0
+        self.__rounds_played = 0
         self.set_num_of_players()
         self.init_game_board()
         self.set_players()
@@ -232,115 +234,156 @@ class Game:
             self.__players.append(Player(name, i))
 
     def play_game(self):
-        for _ in range(100):
+        logger = logging.getLogger('play_game')
+        while self.game_in_progress:
             for player in self.__players:
-                self.ask_upgrade(player)
-                self.ask_mortgage(player)
-                self.ask_redeem(player)
-                self.ask_sell(player)
-                self.play_round(player)
+                if self.game_in_progress:
+                    logger.info('Ход игрока {}'.format(player))
+                    self.log_info_about_player(player)
+                    self.ask_upgrade(player)
+                    self.ask_mortgage(player)
+                    self.ask_redeem(player)
+                    self.ask_sell(player)
+                    self.play_round(player)
+            self.info_about_players()
+            self.__rounds_played += 1
+        logger.info('Игра окончена')
+        self.announce_winner()
 
     def play_round(self, player):
         is_double = self.roll_dice_and_move(player)
-        if self.__board[self.__players[player.num].location].landed_on(self, player):
-            self.__board[self.__players[player.num].location].landed_on(self, player)
+        if self.__board[player.location].landed_on(self, player):
+            self.__board[player.location].landed_on(self, player)
         self.check_fill_color(player)
         if is_double:
             self.__double_in_a_row += 1
             if self.__double_in_a_row == 3:
-                self.__double_in_a_row = 0
-                player.location = 10
-                player.dec_balance(50)
+                self.send_player_to_jail(player)
             else:
                 self.play_round(player)
         self.__double_in_a_row = 0
 
-    def roll_dice_and_move(self, player):
+    def roll_dice_and_move(self, player: Player):
+        logger = logging.getLogger('roll_dice_and_move')
         roll1 = random.randint(1, 6)
         roll2 = random.randint(1, 6)
-        logging.info("Игрок {} выбрасывает {} и {}".format(player, roll1, roll2))
+        logger.info("Игрок {} выбрасывает {} и {}".format(player, roll1, roll2))
         self.__current_roll = roll1 + roll2
+        is_double = (roll1 == roll2)
+        if player.in_jail:
+            if not is_double and player.turns_in_jail == 3:
+                self.take_money_from_player(player, 50)
+                self.get_out_of_jail(player)
+            elif not is_double and player.turns_in_jail < 3:
+                if self.ask_get_out_of_jail(player):
+                    self.take_money_from_player(player, 50)
+                    self.get_out_of_jail(player)
+                else:
+                    player.turns_in_jail += 1
+                    return False
+            else:
+                is_double = False
+                self.get_out_of_jail(player)
         if player.location + self.__current_roll > 39:
             player.location = player.location + roll1 + roll2 - 40
-            logging.info("Игрок {} проходит поле Вперёд".format(player))
+            logger.info("Игрок {} проходит поле Вперёд".format(player))
             self.give_money_to_player(player, 200)
         else:
             player.location += self.__current_roll
-        return roll1 == roll2
+        return is_double
 
     @staticmethod
     def give_money_to_player(player: Player, amount):
+        logger = logging.getLogger('give_money_to_player')
         player.balance += amount
-        logging.info('Игрок {} получает {}Р'.format(player.name, amount))
+        logger.info('Игрок {} получает {}Р'.format(player.name, amount))
 
-    def take_money_from_player(self, player: Player, amount):
+    def take_money_from_player(self, player: Player, amount, *args):
+        logger = logging.getLogger('take_money_from_player')
         if player.balance - amount < 0:
-            logging.info('Игрок {} не может выплатить {}Р'.format(player.name, amount))
+            logger.info('Игрок {} не может выплатить {}Р'.format(player.name, amount))
             if player.net_worth - amount < 0:
-                logging.info('Игрок {} становится банкротом'.format(player))
+                if len(args) == 0:
+                    self.bankrupt_bank(player)
                 return False
             else:
-                logging.info('Игроку [} хватит денег если он заложит/продаст что-то из своих активов'.format(player))
+                logger.info('Игроку [} хватит денег если он заложит/продаст что-то из своих активов'.format(player))
                 self.ask_sell(player)
                 self.ask_mortgage(player)
                 if player.balance - amount < 0:
-                    logging.info('Игрок {} становится банкротом'.format(player))
+                    if len(args) == 0:
+                        self.bankrupt_bank(player)
                     return False
                 self.take_money_from_player(player, amount)
         player.balance -= amount
-        logging.info('Игрок {} платит {}Р'.format(player.name, amount))
+        logger.info('Игрок {} платит {}Р'.format(player.name, amount))
         return True
 
     def transfer_money_between_players(self, from_player: Player, to_player: Player, amount):
-        if not self.take_money_from_player(from_player, amount):
-            
+        if not self.take_money_from_player(from_player, amount, to_player):
+            self.bankrupt_player(from_player, to_player)
             return False
         self.give_money_to_player(to_player, amount)
 
     def offer_property_to_buy(self, current_player, field):
         action = self._offer_property_to_current_player(current_player, field)
-        if action:
+        if action or not self.game_in_progress:
             return
         interested_players = []
         for player in self.__players:
             if not player == current_player:
                 interested_players.append(player)
-        multiplier = 0.8
+        self.auction(interested_players, field)
+
+    def auction(self, interested_players: list, field):
+        logger = logging.getLogger('auction')
+        multiplier = 1
+        interested_players = self._offer_property_to_auction(interested_players, field, multiplier)
         while len(interested_players) > 1:
             multiplier += 0.2
             interested_players = self._offer_property_to_auction(interested_players, field, multiplier)
         if len(interested_players) == 1:
             player = interested_players[0]
-            self.take_money_from_player(player, field.cost*multiplier)
-            logging.info('Игрок {} покупает поле {}  за {}'.format(player, field.name, field.cost*multiplier))
-            field.owner = interested_players[0]
-            player.own_field(field)
+            self.give_property_to_player(player, field)
         else:
-            logging.info('Никто не заинтересован в поле {}'.format(field.name))
+            logger.info('Никто не заинтересован в поле {}'.format(field.name))
 
     def _offer_property_to_current_player(self, current_player, field):
         answer = field.ask_player(current_player)
         if answer == 1:
-            if self.take_money_from_player(current_player, field.cost):
-                print("Игрок {} покупает поле {} за {}".format(current_player.name, field.name, field.cost))
-                field.owner = current_player
-                current_player.own_field(field)
-                return True
+            return self.give_property_to_player(current_player, field)
         return False
 
     @staticmethod
     def _offer_property_to_auction(interested_players, field, multiplier):
+        logger = logging.getLogger('_offer_property_to_auction')
         new_interested_players = []
         for player in interested_players:
-            logging.info('Игрок {} хотите ли купить поле {} за {}Р?'.format(player, field.name,
-                                                                            int(field.cost*multiplier)))
+            logger.info('Игрок {} хотите ли купить поле {} за {}Р?'.format(player, field.name,
+                                                                           int(field.cost*multiplier)))
             answer = int(input())
             if answer == 1:
                 new_interested_players.append(player)
-                logging.info('Игрок {} заинтересован'.format(player))
+                logger.info('Игрок {} заинтересован'.format(player))
             else:
-                logging.info('Игрок {} не заинтересован'.format(player))
+                logger.info('Игрок {} не заинтересован'.format(player))
         return new_interested_players
+
+    def give_property_to_player(self, player: Player, field):
+        logger = logging.getLogger('give_property_to_player')
+        if self.take_money_from_player(player, field.cost):
+            logger.info("Игрок {} покупает поле {} за {}".format(player, field.name, field.cost))
+            field.owner = player
+            player.own_field(field)
+            self.check_fill_color(player)
+            return True
+        return False
+
+    @staticmethod
+    def transfer_property_between_players(from_player: Player, to_player: Player, field):
+        from_player.owned_fields[field.kind].remove(field)
+        field.owner = to_player
+        to_player.own_field(field)
 
     def ask_upgrade(self, player: Player):
         available_colors = self.available_color_to_upgrade(player.owned_fields, player.mortgage_fields)
@@ -388,6 +431,12 @@ class Game:
                 Game.check_fill_color(player)
                 self.ask_mortgage(player)
 
+    @staticmethod
+    def transfer_mortgage_property(from_player: Player, to_player: Player, field):
+        field.owner = to_player
+        from_player.mortgage_fields[field.kind].remove(field)
+        to_player.mortgage_field(field)
+
     def ask_redeem(self, player: Player):
         i = 0
         all_fields = []
@@ -430,6 +479,26 @@ class Game:
                 self.ask_sell(player)
 
     @staticmethod
+    def send_player_to_jail(player):
+        logger = logging.getLogger('send_player_to_jail')
+        logger.info('Игрок {} попадает в тюрьму'.format(player))
+        player.in_jail = True
+        player.turns_in_jail = 0
+        player.location = 10
+
+    @staticmethod
+    def get_out_of_jail(player):
+        logger = logging.getLogger('get_out_of_jail')
+        logger.info('Игрок {} выходит из тюрьмы'.format(player))
+        player.in_jail = False
+
+    @staticmethod
+    def ask_get_out_of_jail(player):
+        logger = logging.getLogger('ask_get_out_of_jail')
+        logger.info('Игрок {} хотите ли вы заплатить 50 за выход из тюрьмы?'.format(player))
+        return bool(int(input()))
+
+    @staticmethod
     def check_fill_color(player: Player):
         for key in player.owned_fields.keys():
             if key not in ['railway', 'utility']:
@@ -445,3 +514,78 @@ class Game:
             if field.has_house:
                 return False
         return True
+
+    def bankrupt_player(self, bankrupt_player: Player, win_player: Player):
+        logger = logging.getLogger('bankrupt_player')
+        logger.info('Игрок {} обанкротил игрока {}'.format(win_player, bankrupt_player))
+        amount = 0
+        for key, fields in bankrupt_player.owned_fields.items():
+            if key not in ['utility', 'railway']:
+                for field in fields:
+                    amount += field.sell_all_house()
+        self.give_money_to_player(win_player, bankrupt_player.balance + amount)
+        bankrupt_player.balance = 0
+        for fields in bankrupt_player.owned_fields.values():
+            for field in fields:
+                self.transfer_property_between_players(bankrupt_player, win_player, field)
+        for fields in bankrupt_player.mortgage_fields.values():
+            for field in fields:
+                self.transfer_mortgage_property(bankrupt_player, win_player, field)
+        self.delete_player(bankrupt_player)
+        self.check_fill_color(win_player)
+
+    def bankrupt_bank(self, bankrupt_player: Player):
+        logger = logging.getLogger('bankrupt_bank')
+        logger.info('Банк обанкротил игрока {}'.format(bankrupt_player))
+        bankrupt_player.balance = 0
+        for fields in bankrupt_player.mortgage_fields.values():
+            for field in fields:
+                field.owner = None
+                field.redeem()
+        fields_for_auction = []
+        for fields in bankrupt_player.owned_fields.values():
+            for field in fields:
+                if field.kind not in ['utility', 'railway']:
+                    field.sell_all_house()
+                field.owner = None
+                fields_for_auction.append(field)
+        self.delete_player(bankrupt_player)
+        if self.game_in_progress:
+            for field in fields_for_auction:
+                self.auction(self.__players, field)
+
+    def delete_player(self, player: Player):
+        self.__players.remove(player)
+        player.owned_fields.clear()
+        player.mortgage_fields.clear()
+        self.__bankrupt_players.append(player)
+
+    @property
+    def game_in_progress(self):
+        return len(self.__players) > 1 and self.__rounds_played < 2000
+
+    def announce_winner(self):
+        logger = logging.getLogger('announce_winner')
+        logger.info('Победитель: игрок {}'.format(self.__players[0]))
+
+    def info_about_players(self):
+        for player in self.__players:
+            self.log_info_about_player(player)
+
+    @staticmethod
+    def log_info_about_player(player: Player):
+        logger = logging.getLogger('log_info_about_player')
+        logger.info('Игрок {}'.format(player))
+        logger.info('Баланс:{}Р'.format(player.balance))
+        if len(player.owned_fields):
+            logger.info('Приобретено:')
+            for fields in player.owned_fields.values():
+                for field in fields:
+                    logger.info(field)
+        if len(player.mortgage_fields):
+            logger.info('Заложено:')
+            for fields in player.mortgage_fields.values():
+                for field in fields:
+                    logger.info(field)
+
+

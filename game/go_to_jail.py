@@ -1,4 +1,5 @@
 from game.field import Field
+import logging
 
 # класс, отвечающий за поле "Отправляйся в тюрьму"
 
@@ -9,9 +10,8 @@ class GoToJail(Field):
         super().__init__(name, location)
 
     def landed_on(self, game, player):
+        logger = logging.getLogger('landed_on')
         self.print_info(player)
-        print("Игрок {} отправляется в тюрьму".format(player.name))
-        print("Игрок {} платит 50".format(player.name))
-        game.take_money_from_player(player, 50)
-        player.location = 10
-        return True
+        logger.info("Игрок {} отправляется в тюрьму".format(player.name))
+        game.send_player_to_jail(player)
+        return False

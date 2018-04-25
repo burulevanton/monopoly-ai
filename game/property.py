@@ -1,5 +1,6 @@
 from game.field import Field
 from abc import ABCMeta, abstractmethod
+import logging
 
 # абстрактный класс, отвечающий за приобретаемые ячейки поля
 
@@ -46,16 +47,17 @@ class Property(Field):
         return self.cost//2
 
     def landed_on(self, game, player):
+        logger = logging.getLogger('landed_on')
         self.print_info(player)
         if self.owner == player:
-            print("Игрок {} отдыхает".format(player.name))
+            logger.info("Игрок {} отдыхает".format(player.name))
         if not self.owner:
             game.offer_property_to_buy(player, self)
         elif self.owner != player and not self.is_mortgage:
             rent = self.get_rent(player) if self.kind == 'utility' else self.get_rent()
             if game.transfer_money_between_players(from_player=player, to_player=self.owner, amount=rent):
-                print("Игрок {} платит {} за аренду владельцу(игроку {})".format(player.name, rent,
-                                                                                 self.owner.name))
+                logger.info("Игрок {} платит {} за аренду владельцу(игроку {})".format(player.name, rent,
+                                                                                       self.owner.name))
         return False
 
     def mortgage(self):
@@ -75,4 +77,10 @@ class Property(Field):
 
     @abstractmethod
     def print_info_about_field(self):
+        pass
+
+    def __repr__(self):
+        pass
+
+    def __str__(self):
         pass

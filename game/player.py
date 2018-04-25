@@ -5,12 +5,12 @@ class Player:
     def __init__(self, player_name, player_num):
         self.__player_name = player_name
         self.__player_num = player_num
-        self.__current_balance = 100
+        self.__current_balance = 1500
         self.__current_location = 0
-        self.__in_game = True
         self.__owned_fields = {}
         self.__mortgage_fields = {}
-        self.__current_roll = 0
+        self.__in_jail = False
+        self.__turns_in_jail = 0
 
     @property
     def name(self):
@@ -49,19 +49,24 @@ class Player:
         return self.__owned_fields
 
     @property
-    def current_roll(self):
-        return self.__current_roll
-
-    @property
     def mortgage_fields(self):
         return self.__mortgage_fields
 
-    def quit_game(self):
-        print("Игрок {} покидает игру".format(self.name))
+    @property
+    def in_jail(self):
+        return self.__in_jail
+
+    @in_jail.setter
+    def in_jail(self, value):
+        self.__in_jail = value
 
     @property
-    def in_game(self):
-        return self.__in_game
+    def turns_in_jail(self):
+        return self.__turns_in_jail
+
+    @turns_in_jail.setter
+    def turns_in_jail(self, value):
+        self.__turns_in_jail = value
 
     def own_field(self, field):
         if field.kind in self.__owned_fields:

@@ -1,4 +1,5 @@
 from game.field import Field
+import logging
 
 # класс, отвечающий за поле "Тюрьма"
 
@@ -9,6 +10,10 @@ class Jail(Field):
         super().__init__(name, location)
 
     def landed_on(self, game, player):
-        self.print_info(player)
-        print("Игрок {} просто посетил".format(player.name))
+        logger = logging.getLogger('landed_on')
+        if player.in_jail:
+            logger.info('Игрок {} находится в тюрьме'.format(player))
+        else:
+            self.print_info(player)
+            logger.info("Игрок {} просто посетил".format(player))
         return False
