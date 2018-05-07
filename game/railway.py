@@ -34,4 +34,7 @@ class Railway(Property):
         return self.__repr__()
 
     def __repr__(self):
-        return 'Поле {} (арендная плата:{}Р, стоимость: {}Р)'.format(self.name, self.get_rent(), self.cost)
+        if self.is_mortgage or not self.owner:
+            return 'Поле {} (арендная плата:25Р, стоимость: {}Р)'.format(self.name, self.cost)
+        else:
+            return 'Поле {} (арендная плата:{}Р, стоимость: {}Р)'.format(self.name, self.get_rent(), self.cost)

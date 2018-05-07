@@ -1,6 +1,8 @@
+from abc import abstractmethod, ABCMeta
 
 
 class Player:
+    __metaclass__ = ABCMeta
 
     def __init__(self, player_name, player_num):
         self.__player_name = player_name
@@ -97,3 +99,32 @@ class Player:
 
     def __repr__(self):
         return self.name
+
+    @abstractmethod
+    def landed_on_unowned_property(self, game, field):
+        pass
+
+    @abstractmethod
+    def property_offered_for_auction(self, game, field):
+        pass
+
+    @abstractmethod
+    def build_house(self, game, field):
+        pass
+
+    @abstractmethod
+    def sell_house(self, game, field):
+        pass
+
+    @abstractmethod
+    def mortgage_property(self, game, field):
+        pass
+
+    @abstractmethod
+    def redeem_property(self, game, field):
+        pass
+
+    @abstractmethod
+    def get_out_of_jail(self, game):
+        pass
+

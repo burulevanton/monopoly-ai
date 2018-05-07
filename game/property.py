@@ -54,7 +54,7 @@ class Property(Field):
         if not self.owner:
             game.offer_property_to_buy(player, self)
         elif self.owner != player and not self.is_mortgage:
-            rent = self.get_rent(player) if self.kind == 'utility' else self.get_rent()
+            rent = self.get_rent(game) if self.kind == 'utility' else self.get_rent()
             if game.transfer_money_between_players(from_player=player, to_player=self.owner, amount=rent):
                 logger.info("Игрок {} платит {} за аренду владельцу(игроку {})".format(player.name, rent,
                                                                                        self.owner.name))

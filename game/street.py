@@ -46,6 +46,10 @@ class Street(Property):
         return self.__num_of_upgrades > 0
 
     @property
+    def num_of_house(self):
+        return self.__num_of_upgrades
+
+    @property
     def cost_of_upgrade(self):
         return self.__cost_of_upgrade
 

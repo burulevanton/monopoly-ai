@@ -13,11 +13,11 @@ class Utility(Property):
     def kind(self):
         return 'utility'
 
-    def get_rent(self, player):
+    def get_rent(self, game):
         if len(self.owner.owned_fields['utility']) == 2:
-            return 10 * player.current_roll
+            return 10 * game.current_roll
         else:
-            return 4 * player.current_roll
+            return 4 * game.current_roll
 
     def ask_player(self, player):
         logger = logging.getLogger('ask_player')
@@ -36,6 +36,9 @@ class Utility(Property):
         return self.__repr__()
 
     def __repr__(self):
-        multiplier = 10 if len(self.owner.owned_fields['utility']) == 2 else 4
-        return 'Поле {} (арендная плата: {}*количество кубиков Р, стоимость: {}Р'.format(self.name, multiplier,
-                                                                                         self.cost)
+        if self.is_mortgage or not self.owner:
+            return 'Поле {} (арендная плата: 4*количество кубиков Р, стоимость: {}Р)'.format(self.name, self.cost)
+        else:
+            multiplier = 10 if len(self.owner.owned_fields['utility']) == 2 else 4
+            return 'Поле {} (арендная плата: {}*количество кубиков Р, стоимость: {}Р'.format(self.name, multiplier,
+                                                                                             self.cost)
