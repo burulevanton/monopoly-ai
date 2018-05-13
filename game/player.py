@@ -9,7 +9,8 @@ class Player:
         self.__player_num = player_num
         self.__current_balance = 1500
         self.__current_location = 0
-        self.__owned_fields = {}
+        self.__owned_fields = {'brown': [], 'blue': [], 'pink': [], 'orange': [], 'red': [], 'yellow': [], 'green': [],
+                               'dark_blue': [], 'utility': [], 'railway': []}
         self.__mortgage_fields = {}
         self.__in_jail = False
         self.__turns_in_jail = 0
@@ -71,19 +72,15 @@ class Player:
         self.__turns_in_jail = value
 
     def own_field(self, field):
-        if field.kind in self.__owned_fields:
             self.__owned_fields[field.kind].append(field)
-        else:
-            self.__owned_fields[field.kind] = [field]
 
     def mortgage_field(self, field):
         if field.kind in self.__mortgage_fields:
             self.__mortgage_fields[field.kind].append(field)
         else:
             self.__mortgage_fields[field.kind] = [field]
-        self.__owned_fields[field.kind].remove(field)
-        if len(self.__owned_fields[field.kind]) == 0:
-            del self.__owned_fields[field.kind]
+        if field in self.__owned_fields[field.kind]:
+            self.__owned_fields[field.kind].remove(field)
 
     def redeem_field(self, field):
         if field.kind in self.__owned_fields:
