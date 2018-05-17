@@ -7,6 +7,15 @@ class Player:
     def __init__(self, player_name, player_num):
         self.__player_name = player_name
         self.__player_num = player_num
+        self.__current_balance = 0
+        self.__current_location = 0
+        self.__owned_fields = {}
+        self.__mortgage_fields = {}
+        self.__in_jail = False
+        self.__turns_in_jail = 0
+        self.start_game()
+
+    def start_game(self):
         self.__current_balance = 1500
         self.__current_location = 0
         self.__owned_fields = {'brown': [], 'blue': [], 'pink': [], 'orange': [], 'red': [], 'yellow': [], 'green': [],
@@ -71,6 +80,15 @@ class Player:
     def turns_in_jail(self, value):
         self.__turns_in_jail = value
 
+    @property
+    def num_of_houses(self):
+        num_of_house = 0
+        for fields in self.__owned_fields.values():
+            for field in fields:
+                if field.kind not in ['utility', 'railway']:
+                    num_of_house += field.num_of_house
+        return num_of_house
+
     def own_field(self, field):
             self.__owned_fields[field.kind].append(field)
 
@@ -102,7 +120,7 @@ class Player:
         pass
 
     @abstractmethod
-    def property_offered_for_auction(self, game, field):
+    def property_offered_for_auction(self, game, field, price):
         pass
 
     @abstractmethod

@@ -9,29 +9,29 @@ class RealPlayer(Player):
         super().__init__('real_player№{}'.format(player_num), player_num)
 
     def landed_on_unowned_property(self, game, field):
-        logging.info('Купить {}'.format(field))
+        logging.info('Купить {}?'.format(field))
         return bool(int(input()))
 
-    def property_offered_for_auction(self, game, field):
-        logging.info('Купить на аукционе{}'.format(field))
+    def property_offered_for_auction(self, game, field, price):
+        logging.info('Купить на аукционе {} за {}Р?'.format(field, price))
         return bool(int(input()))
 
     def build_house(self, game, field):
-        logging.info('Построить дом {}'.format(field))
+        logging.info('Построить дом {}?'.format(field))
         return bool(int(input()))
 
     def sell_house(self, game, field):
-        logging.info('Продать дом {}'.format(field))
+        logging.info('Продать дом {}?'.format(field))
         return bool(int(input()))
 
     def mortgage_property(self, game, field):
-        logging.info('Заложить {}'.format(field))
+        logging.info('Заложить {}?'.format(field))
         return bool(int(input()))
 
     def redeem_property(self, game, field):
-        logging.info('Выкупить {}'.format(field))
+        logging.info('Выкупить {}?'.format(field))
         return bool(int(input()))
 
     def get_out_of_jail(self, game):
-        logging.info('Выйти из тюрьмы')
+        logging.info('Выйти из тюрьмы?')
         return bool(int(input()))

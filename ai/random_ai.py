@@ -11,7 +11,7 @@ class RandomAIPlayer(Player):
     def landed_on_unowned_property(self, game, field):
         return bool(random.randint(0, 1))
 
-    def property_offered_for_auction(self, game, field):
+    def property_offered_for_auction(self, game, field, price):
         return bool(random.randint(0, 1))
 
     def build_house(self, game, field):

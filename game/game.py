@@ -12,8 +12,10 @@ from game.tax import Tax
 from game.utility import Utility
 from ai.random_ai import RandomAIPlayer
 from ai.input import RealPlayer
+from ai.neural_network import NeuralNetworkPLayer
 import logging
 import random
+import math
 
 logging.basicConfig(format=u'%(filename)s[%(lineno)d]# [%(name)s] [%(asctime)s]  %(message)s',
                     level=logging.DEBUG)
@@ -26,14 +28,15 @@ class Game:
         streets_index = ['brown', 'blue', 'pink', 'orange', 'red', 'yellow', 'green', 'dark_blue']
         other_property_index = ['utility', 'railway']
         num_of_other_properties = {
-            'utility' : 2,
-            'railway' : 4
+            'utility': 2,
+            'railway': 4
         }
 
         def __init__(self):
             self.area_player = []
             self.area_other_player = []
             self.finance = []
+            self.action_state = []
 
     def __init__(self):
         self.__board = []
@@ -46,6 +49,18 @@ class Game:
         #self.set_num_of_players()
         self.init_game_board()
         self.set_players()
+
+    def restart_game(self):
+        self.__board.clear()
+        self.init_game_board()
+        for player in self.__bankrupt_players:
+            self.__players.append(player)
+        self.__bankrupt_players.clear()
+        self.__current_roll = 0
+        self.__double_in_a_row = 0
+        self.__rounds_played = 0
+        for player in self.__players:
+            player.start_game()
 
     @property
     def current_roll(self):
@@ -244,8 +259,8 @@ class Game:
         self.__numOfPlayers = int(input())
 
     def set_players(self):
-        self.__players.append(RealPlayer(0))
-        self.__players.append(RandomAIPlayer(1))
+        self.__players.append(RandomAIPlayer(0))
+        self.__players.append(NeuralNetworkPLayer(1))
         # for i in range(self.__numOfPlayers):
         #     print("Введите имя игрока №{}".format(i+1))
         #     name = input()
@@ -253,25 +268,35 @@ class Game:
 
     def play_game(self):
         logger = logging.getLogger('play_game')
-        while self.game_in_progress:
-            for player in self.__players:
-                if self.game_in_progress:
-                    logger.info('Ход игрока {}'.format(player))
-                    self.log_info_about_player(player)
-                    self.ask_upgrade(player)
-                    self.ask_mortgage(player)
-                    self.ask_redeem(player)
-                    self.ask_sell(player)
-                    self.play_round(player)
-            self.info_about_players()
-            #game_state = self.create_game_state_for_player(self.__players[0])
-            self.__rounds_played += 1
-        logger.info('Игра окончена')
-        self.announce_winner()
+        winners = [0, 0]
+        for i in range(1000):
+            while self.game_in_progress:
+                for player in self.__players:
+                    if self.game_in_progress:
+                        logger.info('Ход игрока {}'.format(player))
+                        self.log_info_about_player(player)
+                        self.ask_upgrade(player)
+                        self.ask_mortgage(player)
+                        self.ask_redeem(player)
+                        self.ask_sell(player)
+                        self.play_round(player)
+                self.info_about_players()
+                self.__rounds_played += 1
+            logger.info('Игра окончена')
+            self.announce_winner()
+            winners[self.__players[0].num] += 1
+            print(winners)
+            if isinstance(self.__players[0], NeuralNetworkPLayer):
+                self.__players[0].replay()
+                self.__players[0].model.save_weights("weights.h5", overwrite=True)
+            if isinstance(self.__bankrupt_players[0], NeuralNetworkPLayer):
+                self.__bankrupt_players[0].replay()
+                self.__bankrupt_players[0].model.save_weights("weights.h5", overwrite=True)
+            self.restart_game()
         return self.__players[0].num
 
     def play_round(self, player):
-        if player in self.__players:
+        if player in self.__players and self.game_in_progress:
             is_double = self.roll_dice_and_move(player)
             if self.__board[player.location].landed_on(self, player):
                 self.__board[player.location].landed_on(self, player)
@@ -305,6 +330,8 @@ class Game:
             else:
                 is_double = False
                 self.get_out_of_jail(player)
+        if not self.game_in_progress:
+            return False
         if player.location + self.__current_roll > 39:
             player.location = player.location + roll1 + roll2 - 40
             logger.info("Игрок {} проходит поле Вперёд".format(player))
@@ -345,8 +372,11 @@ class Game:
             return False
         self.give_money_to_player(to_player, amount)
 
-    def offer_property_to_buy(self, current_player, field):
-        action = self._offer_property_to_current_player(current_player, field)
+    def offer_property_to_buy(self, current_player: Player, field):
+        action = False
+        answer = current_player.landed_on_unowned_property(self, field)
+        if answer:
+            action = self.give_property_to_player(current_player, field)
         if action or not self.game_in_progress:
             return
         interested_players = []
@@ -368,11 +398,11 @@ class Game:
         else:
             logger.info('Никто не заинтересован в поле {}'.format(field.name))
 
-    def _offer_property_to_current_player(self, current_player: Player, field):
-        answer = current_player.landed_on_unowned_property(self, field)
-        if answer:
-            return self.give_property_to_player(current_player, field)
-        return False
+    # def _offer_property_to_current_player(self, current_player: Player, field):
+    #     answer = current_player.landed_on_unowned_property(self, field)
+    #     if answer:
+    #         return self.give_property_to_player(current_player, field)
+    #     return False
 
     def _offer_property_to_auction(self, interested_players, field, multiplier):
         logger = logging.getLogger('_offer_property_to_auction')
@@ -380,7 +410,7 @@ class Game:
         for player in interested_players:
             logger.info('Игрок {} хотите ли купить поле {} за {}Р?'.format(player, field.name,
                                                                            int(field.cost*multiplier)))
-            answer = player.property_offered_for_auction(self, field)
+            answer = player.property_offered_for_auction(self, field, int(field.cost*multiplier))
             # answer = int(input())
             if answer:
                 new_interested_players.append(player)
@@ -405,8 +435,14 @@ class Game:
         field.owner = to_player
         to_player.own_field(field)
 
+    def upgrade_property(self, player: Player, field: Street):
+        logger = logging.getLogger('upgrade_property')
+        logger.info('Игрок {} хочет купить дом на поле {}'.format(player, field))
+        if self.take_money_from_player(player, field.cost_of_upgrade):
+            field.upgrade()
+            self.check_fill_color(player)
+
     def ask_upgrade(self, player: Player):
-        logger = logging.getLogger('ask_upgrade')
         available_colors = self.available_color_to_upgrade(player.owned_fields, player.mortgage_fields)
         if len(player.owned_fields) == 0 or len(available_colors) == 0:
             return
@@ -425,26 +461,26 @@ class Game:
                                 return
                             answer = player.build_house(self, field)
                             if answer:
-                                logger.info('Игрок {} покупает дом на поле {}'.format(player, field))
-                                if self.take_money_from_player(player, field.cost_of_upgrade):
-                                    field.upgrade()
-                                    self.check_fill_color(player)
+                                self.upgrade_property(player, field)
                             else:
                                 break
 
+    def mortgage_property(self, player: Player, field):
+        logger = logging.getLogger('mortgage_property')
+        logger.info('Игрок {} закладывает поле {}'.format(player, field))
+        amount = field.mortgage()
+        self.give_money_to_player(player, amount)
+        player.mortgage_field(field)
+        self.check_fill_color(player)
+
     def ask_mortgage(self, player: Player):
-        logger = logging.getLogger('ask_mortgage')
         all_fields = []
         for fields in player.owned_fields.values():
             all_fields.extend(fields)
         if len(all_fields) > 0:
             for field in all_fields:
                 if self.game_in_progress and player.mortgage_property(self, field):
-                    logger.info('Игрок {} закладывает поле {}'.format(player, field))
-                    amount = field.mortgage()
-                    self.give_money_to_player(player, amount)
-                    player.mortgage_field(field)
-                    self.check_fill_color(player)
+                    self.mortgage_property(player, field)
 
     @staticmethod
     def transfer_mortgage_property(from_player: Player, to_player: Player, field):
@@ -452,24 +488,33 @@ class Game:
         from_player.mortgage_fields[field.kind].remove(field)
         to_player.mortgage_field(field)
 
+    def redeem_property(self, player: Player, field):
+        logger = logging.getLogger('redeem_property')
+        logger.info('Игрок {} выкупает поле {}'.format(player, field))
+        if self.take_money_from_player(player, field.redeem_cost):
+            player.redeem_field(field)
+            field.redeem()
+            self.check_fill_color(player)
+
     def ask_redeem(self, player: Player):
-        logger = logging.getLogger('ask_redeem')
         all_fields = []
         for fields in player.mortgage_fields.values():
             all_fields.extend(fields)
         if len(all_fields) > 0:
             for field in all_fields:
                 if self.game_in_progress and player.redeem_property(self, field):
-                    logger.info('Игрок {} выкупает поле {}'.format(player, field))
-                    if self.take_money_from_player(player, field.redeem_cost):
-                        player.redeem_field(field)
-                        field.redeem()
-                        self.check_fill_color(player)
+                    self.redeem_property(player, field)
                     if not self.game_in_progress:
                         return
 
+    def sell_house(self, player: Player, field):
+        logger = logging.getLogger('sell_house')
+        logger.info('Игрок {} продаёт дом на поле {}'.format(player, field))
+        amount = field.sell_house()
+        self.give_money_to_player(player, amount)
+        self.check_fill_color(player)
+
     def ask_sell(self, player: Player):
-        logger = logging.getLogger('ask_sell')
         fields_with_house = []
         for fields in player.owned_fields.values():
             for field in fields:
@@ -482,10 +527,7 @@ class Game:
                     while field.num_of_house > 0:
                         answer = player.sell_house(self, field)
                         if answer:
-                            logger.info('Игрок {} продаёт дом на поле {}'.format(player, field))
-                            amount = field.sell_house()
-                            self.give_money_to_player(player, amount)
-                            self.check_fill_color(player)
+                            self.sell_house(player, field)
                         else:
                             break
 
@@ -512,25 +554,23 @@ class Game:
     def check_fill_color(player: Player):
         for key in player.owned_fields.keys():
             if key not in ['railway', 'utility']:
-                can_double = Game.check_double_condition(player, key)
+                can_double = len(player.owned_fields[key]) == Game.num_field_color(key)
                 for field in player.owned_fields[key]:
-                    field.can_double = can_double
+                    field.can_double = can_double if not field.has_house else False
 
-    @staticmethod
-    def check_double_condition(player: Player, color):
-        if not len(player.owned_fields[color]) == Game.num_field_color(color):
-            return False
-        for field in player.owned_fields[color]:
-            if field.has_house:
-                return False
-        return True
+    # @staticmethod
+    # def check_double_condition(player: Player, color):
+    #     if not len(player.owned_fields[color]) == Game.num_field_color(color):
+    #         return False
+    #     for field in player.owned_fields[color]:
+    #         if field.has_house:
+    #             return False
+    #     return True
 
     def bankrupt_player(self, bankrupt_player: Player, win_player: Player):
         logger = logging.getLogger('bankrupt_player')
         logger.info('Игрок {} обанкротил игрока {}'.format(win_player, bankrupt_player))
         amount = 0
-        if bankrupt_player.balance < 0:
-            raise Exception("allo blyat")
         for key, fields in bankrupt_player.owned_fields.items():
             if key not in ['utility', 'railway']:
                 for field in fields:
@@ -602,24 +642,23 @@ class Game:
                     logger.info(field)
 
     def create_game_state_for_player(self, current_player: Player):
+        # подсчёт значений для улиц для игрока
         game_state = Game.GameState()
         for street in game_state.streets_index:
-            info = 0
-            if street in current_player.owned_fields:
-                num_mortgage = 0
-                sum_num_of_houses = 0
-                for field in current_player.owned_fields[street]:
-                    sum_num_of_houses += field.num_of_house
-                if street in current_player.mortgage_fields:
-                    num_mortgage = len(current_player.mortgage_fields[street])
-                info = 6 / self.num_field_color(street) * len(current_player.owned_fields[street])
-                if num_mortgage == 0:
-                    info = info + sum_num_of_houses / len(current_player.owned_fields[street])
-                info /= 10
+            num_mortgage = 0
+            sum_num_of_houses = 0
+            for field in current_player.owned_fields[street]:
+                sum_num_of_houses += field.num_of_house
+            if street in current_player.mortgage_fields:
+                num_mortgage = len(current_player.mortgage_fields[street])
+            info = 6 / self.num_field_color(street) * len(current_player.owned_fields[street])
+            if num_mortgage == 0 and sum_num_of_houses > 0:
+                info = info + sum_num_of_houses / len(current_player.owned_fields[street])
+            info /= 10
             game_state.area_player.append(info)
 
+        # подсчёт значений для улиц для других игроков
         for street in game_state.streets_index:
-            info = 0
             num_mortgage = 0
             sum_num_of_houses = 0
             num_owned = 0
@@ -636,12 +675,14 @@ class Game:
             info /= 10
             game_state.area_other_player.append(info)
 
+        # подсчёт значений для других полей для текущего игрока
         for other_property in game_state.other_property_index:
             info = 0
             if other_property in current_player.owned_fields:
                 info = len(current_player.owned_fields[other_property])/game_state.num_of_other_properties[other_property]
             game_state.area_player.append(info)
 
+        # подсчёт значений для других полей для другого игрока
         for other_property in game_state.other_property_index:
             num_owned = 0
             for player in self.__players:
@@ -650,6 +691,7 @@ class Game:
             info = num_owned / game_state.num_of_other_properties[other_property]
             game_state.area_other_player.append(info)
 
+        # подсчёт финансовой составляющей
         total_amount = 0
         for player in self.__players:
             total_amount += player.net_worth
@@ -658,3 +700,27 @@ class Game:
         game_state.finance.append(x)
 
         return game_state
+
+    def calculate_reward(self, current_player: Player):
+        num_of_owned_fields = 0
+        for fields in current_player.owned_fields.values():
+            num_of_owned_fields += len(fields)
+        num_of_owned_fields_enemy = 0
+        houses_enemy = 0
+        for player in self.__players:
+            if not player == current_player:
+                houses_enemy += player.num_of_houses
+                for fields in player.owned_fields.values():
+                    num_of_owned_fields_enemy += len(fields)
+
+        v = num_of_owned_fields + current_player.num_of_houses - num_of_owned_fields_enemy - houses_enemy
+
+        total = 0
+        for player in self.__players:
+            total += player.balance
+
+        m = current_player.balance/total
+
+        num_of_players = len(self.__players)
+
+        return (v/num_of_players/4) / (1 + math.fabs(v/num_of_players/4)) + m/num_of_players
