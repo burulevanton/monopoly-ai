@@ -6,6 +6,7 @@ class NeuralNetworkEnv:
     def __init__(self):
         self.index_of_properties = ['brown', 'blue', 'pink', 'orange', 'red', 'yellow', 'green', 'dark_blue',
                                     'utility', 'railway']
+        self.actions = [100, 200, 300, 400, (150, 200), (100, 150), (50, 100), (0, 50), 0]
         self.current_state = []
         self.current_action = None
 
@@ -17,13 +18,13 @@ class NeuralNetworkEnv:
         temp_state.extend(state.finance)
         temp_state.extend(state.action_state)
         state = np.array(temp_state)
-        return state.reshape(1, 25)
+        return state.reshape(1, 23)
 
     def buy_property_state(self, game, player, field, price):
         state = game.create_game_state_for_player(player)
-        state.action_state.append(0.2)
+        #state.action_state.append(0.2)
         state.action_state.append((self.index_of_properties.index(field.kind) + 1) / 10)
-        state.action_state.append(-price / (player.balance+price))
+        #state.action_state.append(-price / (player.balance + price))
         state = self.create_numpy_state(state)
         if len(self.current_state) > 0:
             reward = game.calculate_reward(player)
@@ -34,9 +35,9 @@ class NeuralNetworkEnv:
 
     def build_house_state(self, game, player, field):
         state = game.create_game_state_for_player(player)
-        state.action_state.append(0.4)
+        #state.action_state.append(0.4)
         state.action_state.append((self.index_of_properties.index(field.kind) + 1) / 10)
-        state.action_state.append(-field.cost_of_upgrade / (player.balance+field.cost_of_upgrade))
+        #state.action_state.append(-field.cost_of_upgrade / (player.balance + field.cost_of_upgrade))
         state = self.create_numpy_state(state)
         reward = game.calculate_reward(player)
         done = not game.game_in_progress
@@ -46,9 +47,9 @@ class NeuralNetworkEnv:
 
     def sell_house_state(self, game, player, field):
         state = game.create_game_state_for_player(player)
-        state.action_state.append(0.6)
+        #state.action_state.append(0.6)
         state.action_state.append((self.index_of_properties.index(field.kind) + 1) / 10)
-        state.action_state.append((field.cost_of_upgrade//2) / (player.balance+field.cost_of_upgrade//2))
+        #state.action_state.append((field.cost_of_upgrade // 2) / (player.balance + field.cost_of_upgrade // 2))
         state = self.create_numpy_state(state)
         reward = game.calculate_reward(player)
         done = not game.game_in_progress
@@ -58,9 +59,9 @@ class NeuralNetworkEnv:
 
     def mortgage_property_state(self, game, player, field):
         state = game.create_game_state_for_player(player)
-        state.action_state.append(0.8)
+        #state.action_state.append(0.8)
         state.action_state.append((self.index_of_properties.index(field.kind) + 1) / 10)
-        state.action_state.append( (field.cost//2) / (player.balance+field.cost//2))
+        #state.action_state.append((field.cost // 2) / (player.balance + field.cost // 2))
         state = self.create_numpy_state(state)
         reward = game.calculate_reward(player)
         done = not game.game_in_progress
@@ -70,9 +71,9 @@ class NeuralNetworkEnv:
 
     def redeem_property_state(self, game, player, field):
         state = game.create_game_state_for_player(player)
-        state.action_state.append(1.0)
+        #state.action_state.append(1.0)
         state.action_state.append((self.index_of_properties.index(field.kind) + 1) / 10)
-        state.action_state.append(-field.redeem_cost / (player.balance+field.redeem_cost))
+        #state.action_state.append(-field.redeem_cost / (player.balance + field.redeem_cost))
         state = self.create_numpy_state(state)
         reward = game.calculate_reward(player)
         done = not game.game_in_progress

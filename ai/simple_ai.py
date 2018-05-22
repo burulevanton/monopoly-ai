@@ -29,8 +29,11 @@ class SimpleAIPlayer(Player):
         return False
 
     def mortgage_property(self, game, field):
-        if self.balance < self.min_cash and not field.has_house:
-            return True
+        if self.balance < self.min_cash:
+            if field.kind not in ['utility', 'railway'] and not field.has_house:
+                return True
+            if field.kind in ['utility', 'railway']:
+                return True
         return False
 
     def redeem_property(self, game, field):

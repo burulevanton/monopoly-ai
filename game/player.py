@@ -12,6 +12,7 @@ class Player:
         self.__owned_fields = {}
         self.__mortgage_fields = {}
         self.__in_jail = False
+        self.__in_game = True
         self.__turns_in_jail = 0
         self.start_game()
 
@@ -23,6 +24,7 @@ class Player:
         self.__mortgage_fields = {}
         self.__in_jail = False
         self.__turns_in_jail = 0
+        self.__in_game = True
 
     @property
     def name(self):
@@ -68,6 +70,14 @@ class Player:
     def in_jail(self):
         return self.__in_jail
 
+    @property
+    def in_game(self):
+        return self.__in_game
+
+    @in_game.setter
+    def in_game(self, value):
+        self.__in_game = value
+
     @in_jail.setter
     def in_jail(self, value):
         self.__in_jail = value
@@ -107,7 +117,7 @@ class Player:
             self.__owned_fields[field.kind] = [field]
         self.__mortgage_fields[field.kind].remove(field)
         if len(self.__mortgage_fields[field.kind]) == 0:
-            del self.__mortgage_fields[field.kind]
+                del self.__mortgage_fields[field.kind]
 
     def __str__(self):
         return self.__repr__()
